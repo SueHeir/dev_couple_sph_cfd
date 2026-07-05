@@ -1,0 +1,67 @@
+[package]
+name = "dev_couple_sph_cfd"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/SueHeir/dev_couple_sph_cfd"
+description = "Cross-substrate coupling: granular-SPH (dev_soil_sph) <-> compressible CFD (dev_field_efvm) via grass_multi"
+publish = false
+
+# Own workspace root so cargo does not walk up into the sibling tier workspaces.
+[workspace]
+
+[[example]]
+name = "plume_surface"
+path = "examples/plume_surface/main.rs"
+
+# ---------------------------------------------------------------------------
+# This repo is a COUPLING: it depends on BOTH partner tiers and joins their
+# sub-Apps through grass_multi. The hard constraint is that every crate must
+# resolve grass/soil/field to ONE shared source, so the SPH sub-App and the CFD
+# sub-App share exactly one `grass_app::App` / `soil_core::Atom` type across the
+# seam. We do that the same way dev_field_efvm does: sibling PATH deps for the
+# shared substrates, and a [patch] that redirects the SPH tier's git deps on
+# grass/soil to those same paths. All partner repos are sibling checkouts under
+# ~/projects, exactly as the fleet lays them out.
+# ---------------------------------------------------------------------------
+[dependencies]
+# CFD side (dev_field_efvm) — path-dep its physics crates.
+cfd_eos    = { path = "../dev_field_efvm/crates/cfd_eos" }
+cfd_ibm    = { path = "../dev_field_efvm/crates/cfd_ibm" }
+cfd_solver = { path = "../dev_field_efvm/crates/cfd_solver" }
+cfd_state  = { path = "../dev_field_efvm/crates/cfd_state" }
+
+# SPH side (dev_soil_sph) — path-dep its physics crates.
+sph_core         = { path = "../dev_soil_sph/crates/sph_core" }
+sph_atom         = { path = "../dev_soil_sph/crates/sph_atom" }
+sph_constitutive = { path = "../dev_soil_sph/crates/sph_constitutive" }
+sph_physics      = { path = "../dev_soil_sph/crates/sph_physics" }
+
+# Shared substrates + framework (the single source everything must agree on).
+field_core  = { path = "../field/crates/field_core" }
+grass_app   = { path = "../grass/crates/grass_app" }
+grass_io    = { path = "../grass/crates/grass_io" }
+grass_multi = { path = "../grass/crates/grass_multi" }
+soil_core   = { path = "../soil/crates/soil_core", default-features = false, features = ["precision-double"] }
+
+serde = { version = "1", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+
+# Redirect the SPH tier's git deps on grass/soil to the sibling path checkouts,
+# so there is exactly ONE grass/soil across the coupled sub-Apps.
+[patch."ssh://git@192.168.0.170:2222/SueHeir/grass.git"]
+grass_app       = { path = "../grass/crates/grass_app" }
+grass_scheduler = { path = "../grass/crates/grass_scheduler" }
+grass_mpi       = { path = "../grass/crates/grass_mpi" }
+grass_derive    = { path = "../grass/crates/grass_derive" }
+grass_io        = { path = "../grass/crates/grass_io" }
+grass_multi     = { path = "../grass/crates/grass_multi" }
+
+[patch."ssh://git@192.168.0.170:2222/SueHeir/soil.git"]
+soil_core   = { path = "../soil/crates/soil_core" }
+soil_derive = { path = "../soil/crates/soil_derive" }
+soil_verlet = { path = "../soil/crates/soil_verlet" }
+soil_print  = { path = "../soil/crates/soil_print" }
+soil_deform = { path = "../soil/crates/soil_deform" }
