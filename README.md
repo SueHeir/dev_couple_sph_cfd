@@ -30,6 +30,11 @@ compose two independently-developed tiers. So each such coupling gets its own
 
 ## What it does — plume ↔ surface interaction
 
+Reusable SPH-CFD coupling code lives in `crates/sph_cfd`: packed-bed closure and
+reference helpers, parcel deposition, force-balance measurement, SPH force import,
+CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
+Examples keep case geometry, validation tolerances, comparison packings, and plots.
+
 The `plume_surface` example couples a compressible gas jet (dev_field_efvm, on a
 FIELD mesh) to a granular bed (dev_soil_sph, as SOIL particles): the gas exerts
 drag on the grains and the grains displace/block the gas — the dynamic
