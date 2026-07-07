@@ -1,0 +1,24 @@
+[package]
+name = "sph_cfd"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/SueHeir/dev_couple_sph_cfd"
+description = "Reusable unresolved granular-SPH <-> CFD coupling seam helpers on GRASS."
+publish = false
+
+[dependencies]
+cfd_eos    = { path = "../../../dev_field_efvm/crates/cfd_eos" }
+cfd_ibm    = { path = "../../../dev_field_efvm/crates/cfd_ibm" }
+cfd_solver = { path = "../../../dev_field_efvm/crates/cfd_solver" }
+cfd_state  = { path = "../../../dev_field_efvm/crates/cfd_state" }
+
+sph_core = { path = "../../../dev_soil_sph/crates/sph_core" }
+
+field_core  = { path = "../../../field/crates/field_core" }
+grass_app   = { path = "../../../grass/crates/grass_app" }
+grass_io    = { path = "../../../grass/crates/grass_io" }
+grass_multi = { path = "../../../grass/crates/grass_multi" }
+soil_core   = { path = "../../../soil/crates/soil_core", default-features = false, features = ["precision-double"] }
+
+serde = { version = "1", features = ["derive"] }

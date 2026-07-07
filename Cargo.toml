@@ -9,6 +9,7 @@ publish = false
 
 # Own workspace root so cargo does not walk up into the sibling tier workspaces.
 [workspace]
+members = ["crates/sph_cfd"]
 
 [[example]]
 name = "plume_surface"
@@ -25,24 +26,13 @@ path = "examples/plume_surface/main.rs"
 # ~/projects, exactly as the fleet lays them out.
 # ---------------------------------------------------------------------------
 [dependencies]
-# CFD side (dev_field_efvm) — path-dep its physics crates.
-cfd_eos    = { path = "../dev_field_efvm/crates/cfd_eos" }
-cfd_ibm    = { path = "../dev_field_efvm/crates/cfd_ibm" }
-cfd_solver = { path = "../dev_field_efvm/crates/cfd_solver" }
-cfd_state  = { path = "../dev_field_efvm/crates/cfd_state" }
+sph_cfd = { path = "crates/sph_cfd" }
 
-# SPH side (dev_soil_sph) — path-dep its physics crates.
-sph_core         = { path = "../dev_soil_sph/crates/sph_core" }
-sph_atom         = { path = "../dev_soil_sph/crates/sph_atom" }
-sph_constitutive = { path = "../dev_soil_sph/crates/sph_constitutive" }
-sph_physics      = { path = "../dev_soil_sph/crates/sph_physics" }
-
-# Shared substrates + framework (the single source everything must agree on).
-field_core  = { path = "../field/crates/field_core" }
-grass_app   = { path = "../grass/crates/grass_app" }
-grass_io    = { path = "../grass/crates/grass_io" }
+# Example-local case setup still builds the SPH bed and parent grass_multi driver.
+sph_core   = { path = "../dev_soil_sph/crates/sph_core" }
+field_core = { path = "../field/crates/field_core" }
+grass_io   = { path = "../grass/crates/grass_io" }
 grass_multi = { path = "../grass/crates/grass_multi" }
-soil_core   = { path = "../soil/crates/soil_core", default-features = false, features = ["precision-double"] }
 
 serde = { version = "1", features = ["derive"] }
 
