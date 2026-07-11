@@ -47,6 +47,10 @@ sharing exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
 cargo run --release --example plume_surface -- examples/plume_surface/config.toml
 ```
 
+Repo-level validation is declared in `validation/manifest.toml` and runs through
+`validation/run.sh`, which delegates to the plume-surface sweep so the numeric
+gate and committed figure come from the same measured output.
+
 ## License
 
 MIT OR Apache-2.0
