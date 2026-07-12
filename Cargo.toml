@@ -29,10 +29,10 @@ path = "examples/plume_surface/main.rs"
 sph_cfd = { path = "crates/sph_cfd" }
 
 # Example-local case setup still builds the SPH bed and parent grass_multi driver.
-sph_core   = { path = "../dev_soil_sph/crates/sph_core" }
-field_core = { path = "../field/crates/field_core" }
-grass_io   = { path = "../grass/crates/grass_io" }
-grass_multi = { path = "../grass/crates/grass_multi" }
+sph_core   = { git = "https://github.com/SueHeir/dev_soil_sph.git", branch = "main" }
+field_core = { git = "https://github.com/SueHeir/field.git", branch = "main" }
+grass_io   = { git = "https://github.com/SueHeir/grass.git", branch = "main" }
+grass_multi = { git = "https://github.com/SueHeir/grass.git", branch = "main" }
 
 serde = { version = "1", features = ["derive"] }
 
@@ -41,17 +41,3 @@ opt-level = 3
 
 # Redirect the SPH tier's git deps on grass/soil to the sibling path checkouts,
 # so there is exactly ONE grass/soil across the coupled sub-Apps.
-[patch."ssh://git@192.168.0.170:2222/SueHeir/grass.git"]
-grass_app       = { path = "../grass/crates/grass_app" }
-grass_scheduler = { path = "../grass/crates/grass_scheduler" }
-grass_mpi       = { path = "../grass/crates/grass_mpi" }
-grass_derive    = { path = "../grass/crates/grass_derive" }
-grass_io        = { path = "../grass/crates/grass_io" }
-grass_multi     = { path = "../grass/crates/grass_multi" }
-
-[patch."ssh://git@192.168.0.170:2222/SueHeir/soil.git"]
-soil_core   = { path = "../soil/crates/soil_core" }
-soil_derive = { path = "../soil/crates/soil_derive" }
-soil_verlet = { path = "../soil/crates/soil_verlet" }
-soil_print  = { path = "../soil/crates/soil_print" }
-soil_deform = { path = "../soil/crates/soil_deform" }
