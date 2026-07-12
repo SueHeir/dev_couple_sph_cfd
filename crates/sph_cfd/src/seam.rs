@@ -348,9 +348,8 @@ pub struct CoupledRunResult {
 
 pub fn coupled_diag(parent: &App) -> CoupledSeamDiag {
     let subs = parent.get_resource_ref::<SubApps>().unwrap();
-    let cell = subs
-        .find("cfd")
-        .unwrap()
+    let cfd = subs.find("cfd").unwrap();
+    let cell = cfd
         .resource_cell(TypeId::of::<CoupledSeamDiag>())
         .unwrap()
         .borrow();

@@ -42,6 +42,19 @@ minimum-fluidization / landing-plume-on-regolith cratering problem. The two
 solvers run as **grass sub-Apps under one parent schedule** (`Tick → Couple`),
 sharing exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
 
+The coupling system runs on the **parent** App. It obtains stable participant
+handles from `SubApps`, reads each solver's resources between child ticks, and
+returns the force through the public seam resources in
+[`crates/sph_cfd/src/seam.rs`](crates/sph_cfd/src/seam.rs). Child systems use
+ordinary `Res`/`ResMut` for their own state; no child contains a `MultiRes` view
+of another solver.
+
+This repo currently proves the local composition path. It does **not** yet claim
+the topology-driven split-MPI validation that the DEM-CFD sibling has. The
+distributed target is the same shape: one TOML topology, one binary, role-local
+solver construction, and coupling-owned position/owner routing over GRASS's
+generic addressed exchange.
+
 ```bash
 # all partner repos are sibling checkouts (grass, soil, field, dev_soil_sph, dev_field_efvm)
 cargo run --release --example plume_surface -- examples/plume_surface/config.toml
