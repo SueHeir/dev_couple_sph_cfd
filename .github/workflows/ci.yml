@@ -27,3 +27,10 @@ jobs:
           ! grep -R -E '192\.168\.|ssh://git@|path = "\.\./' --include='Cargo.toml' .
       - name: Test workspace
         run: cargo test --workspace
+      - name: Same-binary local and 3+2 MPI example
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+        run: |
+          cargo run --example routed_sph_cfd --features mpi-routing
+          cargo build --example routed_sph_cfd --features mpi-routing
+          timeout 60 mpirun --oversubscribe -np 5 target/debug/examples/routed_sph_cfd
