@@ -7,6 +7,10 @@ repository = "https://github.com/SueHeir/dev_couple_sph_cfd"
 description = "Reusable unresolved granular-SPH <-> CFD coupling seam helpers on GRASS."
 publish = false
 
+[features]
+default = []
+mpi-routing = ["grass_multi/mpi", "field_core/mpi_backend"]
+
 [dependencies]
 cfd_eos    = { git = "https://github.com/SueHeir/dev_field_efvm.git", branch = "main" }
 cfd_ibm    = { git = "https://github.com/SueHeir/dev_field_efvm.git", branch = "main" }

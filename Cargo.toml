@@ -13,7 +13,7 @@ members = ["crates/sph_cfd"]
 
 [features]
 default = []
-mpi-routing = ["grass_multi/mpi", "field_core/mpi_backend"]
+mpi-routing = ["sph_cfd/mpi-routing", "grass_multi/mpi", "field_core/mpi_backend"]
 
 [[example]]
 name = "plume_surface"
