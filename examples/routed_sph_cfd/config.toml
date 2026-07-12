@@ -1,0 +1,10 @@
+[topology]
+mode = "auto"
+
+[[topology.role]]
+name = "sph"
+ranks = 3
+
+[[topology.role]]
+name = "cfd"
+ranks = 2

@@ -9,6 +9,7 @@ pub mod bed;
 pub mod config;
 pub mod drag;
 pub mod reference;
+pub mod routing;
 pub mod seam;
 
 pub mod prelude {

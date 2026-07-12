@@ -11,9 +11,18 @@ publish = false
 [workspace]
 members = ["crates/sph_cfd"]
 
+[features]
+default = []
+mpi-routing = ["grass_multi/mpi", "field_core/mpi_backend"]
+
 [[example]]
 name = "plume_surface"
 path = "examples/plume_surface/main.rs"
+
+[[example]]
+name = "routed_sph_cfd"
+path = "examples/routed_sph_cfd/main.rs"
+required-features = ["mpi-routing"]
 
 # ---------------------------------------------------------------------------
 # This repo is a COUPLING: it depends on BOTH partner tiers and joins their

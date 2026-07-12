@@ -50,10 +50,17 @@ ordinary `Res`/`ResMut` for their own state; no child contains a `MultiRes` view
 of another solver.
 
 This repo currently proves the local composition path. It does **not** yet claim
-the topology-driven split-MPI validation that the DEM-CFD sibling has. The
-distributed target is the same shape: one TOML topology, one binary, role-local
-solver construction, and coupling-owned position/owner routing over GRASS's
-generic addressed exchange.
+the full plume solver under split MPI, but it now proves the same distributed
+coupling contract with the runnable
+[`routed_sph_cfd`](examples/routed_sph_cfd/main.rs) example: one binary, one
+`mode = "auto"` TOML, coupling-owned parcel/force records, and FIELD-owned
+position-to-rank lookup over GRASS's generic addressed exchange.
+
+```bash
+cargo run --example routed_sph_cfd --features mpi-routing
+cargo build --example routed_sph_cfd --features mpi-routing
+mpirun --oversubscribe -np 5 target/debug/examples/routed_sph_cfd
+```
 
 ```bash
 # all partner repos are sibling checkouts (grass, soil, field, dev_soil_sph, dev_field_efvm)
