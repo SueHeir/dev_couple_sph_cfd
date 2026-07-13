@@ -28,19 +28,28 @@ their own thing: they need `grass_multi` + a transport/interphase seam, and they
 compose two independently-developed tiers. So each such coupling gets its own
 `dev_couple_*` repo, depending on its two partner tiers and nothing more.
 
-## What it does — plume ↔ surface interaction
+## What it does — packed-bed fluidization seam
 
 Reusable SPH-CFD coupling code lives in `crates/sph_cfd`: packed-bed closure and
 reference helpers, parcel deposition, force-balance measurement, SPH force import,
 CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
 Examples keep case geometry, validation tolerances, comparison packings, and plots.
 
-The `plume_surface` example couples a compressible gas jet (dev_field_efvm, on a
-FIELD mesh) to a granular bed (dev_soil_sph, as SOIL particles): the gas exerts
-drag on the grains and the grains displace/block the gas — the dynamic
-minimum-fluidization / landing-plume-on-regolith cratering problem. The two
-solvers run as **grass sub-Apps under one parent schedule** (`Tick → Couple`),
-sharing exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
+The `plume_surface` example couples a gas flow (dev_field_efvm, on a FIELD mesh)
+to a granular bed (dev_soil_sph, as SOIL particles): the gas exerts drag on the
+grains and the grains displace/block the gas.  It validates the
+minimum-fluidization seam against the Wen--Yu correlation and a discrete
+same-seam comparison, including executable fault controls. The two solvers run
+as **grass sub-Apps under one parent schedule** (`Tick → Couple`), sharing
+exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
+
+This repository does not currently provide a validated impinging-jet crater,
+erosion, or ejecta prediction. Such a claim requires a geometry-, material-,
+forcing-, and observation-time-matched experimental series; a self-consistent
+flow profile or a differently configured experiment is not a substitute. The
+previous proposed jet-crater case is deliberately absent from this branch for
+that reason. The code and this clarification were prepared with AI assistance;
+they require domain-expert review before use in scientific conclusions.
 
 The coupling system runs on the **parent** App. It obtains stable participant
 handles from `SubApps`, reads each solver's resources between child ticks, and
