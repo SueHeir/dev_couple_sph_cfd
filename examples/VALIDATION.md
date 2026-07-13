@@ -1,5 +1,13 @@
 # Validation index
 
+## PSI external-evidence status
+
+[`psi_evidence`](psi_evidence/README.md) is a fail-closed eligibility gate for
+the pending impinging-plume/crater goal. It deliberately exits nonzero because
+no geometry- and observable-matched primary-source series or independent
+advancing-CFD comparator is committed. It is not a validation result and does
+not authorize interpreting the fluidization check below as PSI validation.
+
 ## Coupled SPH-CFD plume/surface minimum fluidization
 
 [The plume_surface validation](plume_surface/README.md) runs the live SPH-CFD
