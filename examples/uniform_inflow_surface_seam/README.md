@@ -40,14 +40,12 @@ ensuring that automation cannot record the run as a PSI-validation PASS.
 
 ## What an eligible comparison must contain
 
-The repository now enforces a machine-readable external-comparison contract
-through [`data/validation_contract.py`](data/validation_contract.py).  Before a
-future driver can compare a PSI result, it must commit a source-data manifest
-with citation, circular-nozzle geometry, stand-off, gas, material, grain range,
-forcing, duration, same-observable units, an absolute experimental uncertainty,
-the raw/digitized data file, and a deliberately wrong coupling control.  This
-does not make the present experiment eligible: no such manifest is included for
-the mismatched Metzger trace.
+A future validation must use a primary observation series with source data (or
+a documented digitization), configured circular-nozzle geometry, stand-off,
+gas, material, grain range, forcing, duration, the same observable and units,
+measurement uncertainty, convergence evidence, and a deliberately wrong
+coupling control evaluated against that same held-out series. These are review
+requirements, not a local manifest that can authorize a scientific claim.
 
 ## Authorship and validation limits
 

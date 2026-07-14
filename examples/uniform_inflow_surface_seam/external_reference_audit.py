@@ -24,14 +24,6 @@ def value(key: str) -> float:
 
 
 def main() -> None:
-    # The generic manifest gate is intentionally evaluated first.  This branch
-    # has no source-data manifest because the only retrieved paper is
-    # ineligible; a future candidate cannot bypass the required provenance,
-    # uncertainty, observable, and adversarial-control fields.
-    contract = HERE / "data" / "external-comparison.json"
-    if not contract.is_file():
-        print("EXTERNAL PSI VALIDATION CONTRACT")
-        print("INELIGIBLE: no external-comparison manifest with source data is committed")
     # Values printed by the source; they are reference metadata, never fit from
     # the executable's output.
     reference = {

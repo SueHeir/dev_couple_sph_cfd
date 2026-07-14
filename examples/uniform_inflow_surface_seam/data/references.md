@@ -21,9 +21,10 @@ validation must commit source values and units, compare a measured
 crater-depth/volume/ejecta-rate observable with a predeclared defensible tolerance,
 and include an adversarial control that fails that external comparison.
 
-`validation_contract.py` encodes those minimum evidence fields without reading
-simulation output.  A future comparator must call it on a committed
-`external-comparison.json` manifest before it is permitted to emit a verdict.
+Those minimum evidence fields are review requirements, not a local manifest
+that can authorize a verdict. A future comparator must independently reproduce
+a case-matched primary observation series and evaluate both the model and a
+wrong-coupling control against it.
 
 AI-assisted implementation and the absence of an independently reproduced,
 geometry-matched experimental series remain validation limitations.
