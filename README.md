@@ -33,13 +33,13 @@ compose two independently-developed tiers. So each such coupling gets its own
 Reusable SPH-CFD coupling code lives in `crates/sph_cfd`: packed-bed closure and
 reference helpers, parcel deposition, force-balance measurement, SPH force import,
 CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
-Examples keep case geometry, validation tolerances, comparison packings, and plots.
+Examples keep case geometry, frozen regression limits, comparison packings, and plots.
 
 The `plume_surface` example couples an **imposed homogeneous interstitial gas
 velocity** (stored in dev_field_efvm's FIELD state) to a granular bed
 (dev_soil_sph, as SOIL particles). It exercises the drag/pressure-gradient
-force hand-off and validates that limited packed-bed seam regression against the
-Wen--Yu correlation, with executable fault controls. It does not advance a CFD
+force hand-off and runs a limited packed-bed seam regression with a Wen--Yu
+diagnostic comparator and executable fault controls. It does not advance a CFD
 solution or represent a nozzle, a plume, or a crater. The two sub-Apps run
 as **grass sub-Apps under one parent schedule** (`Tick → Couple`), sharing
 exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
@@ -50,11 +50,12 @@ advancing CFD solver with specified inlet/outlet conditions, a geometry-,
 material-, forcing-, and observation-time-matched experimental series, and a
 same-observable comparator with an adversarial wrong-coupling control. A
 self-consistent flow profile or differently configured experiment is not a
-substitute. The previous proposed jet-crater case is deliberately absent from
-this branch for that reason. No manifest or local claim guard is presented as
-scientific evidence: this boundary is documentation, not a passing test. The
-code and this clarification were prepared with AI assistance; they require
-domain-expert review before use in scientific conclusions.
+substitute. The concrete held-out protocol, including source provenance and an
+adversarial wrong-coupling control, is in
+[`examples/plume_surface/EXTERNAL_VALIDATION.md`](examples/plume_surface/EXTERNAL_VALIDATION.md).
+No local manifest or claim guard is scientific evidence. This code and its
+documentation were authored with AI assistance and require domain-expert review
+before use in scientific conclusions.
 
 The coupling system runs on the **parent** App. It obtains stable participant
 handles from `SubApps`, reads each solver's resources between child ticks, and

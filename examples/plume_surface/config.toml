@@ -1,19 +1,13 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Coupled SPH–CFD plume/surface interaction — the DYNAMIC minimum-fluidization
-# limit, cross-validated against the resolved DEM–CFD reference.
+# Imposed-flow packed-bed force-transfer regression. This is not a plume,
+# impinging-jet, crater, erosion, or ejecta case.
 #
 # A gas flows UP (+z) through a settled μ(I)-continuum granular bed (dev_soil_sph SPH),
 # coupled to the gas (dev_field_efvm FIELD) through the DEM–CFD seam VERBATIM
-# (`cfd_ibm::coupling`). The tolerance-checked observable is the minimum
-# fluidization velocity U_mf, measured through the LIVE coupled seam and:
-#   1. cross-method vs the discrete DEM–CFD bed run through the identical seam
-#      (the resolved DEM–CFD reference — cf. fluidized_bed_umf / PR #6),
-#   2. vs the independent Wen & Yu (1966) correlation,
-# with two negative controls (omit-∇P, ε-power bug) that RUN and must fail, plus a
-# live coupled dynamical sweep in which the SPH continuum fluidizes above U_mf
-# (net upward COM velocity, grain-contact pressure collapsing) and stays packed
-# below. The MEASURED force uses the INDEPENDENT MacDonald (1979) 180/1.8 closure
-# (no shared constant with Wen & Yu), so agreement is genuine, not tautological.
+# (`cfd_ibm::coupling`). The local regression reports U_mf through the live seam,
+# plus a same-seam DEM consistency value and a Wen & Yu (1966) packed-bed
+# comparator. Its fault controls and dynamic sweep detect implementation changes.
+# They do not create experimental evidence or plume acceptance criteria.
 #
 # Small & fast: coarse gas mesh, d = 0.5 mm grains, a ~3 cm bed, air.
 # Everything below is declarative; the .rs holds no physics magic numbers.
@@ -73,7 +67,8 @@ dyn_factors = [0.5, 0.8, 1.2, 1.5]
 dyn_steps   = 2500        # coupled parent iterations per sweep point
 
 [validation]
-# Gate: cross-method + independent + non-tautology + negative controls + dynamical.
+# Frozen local regression limits. They are not uncertainty bounds or acceptance
+# criteria for any plume-surface claim; do not tune them to obtain a pass.
 tol_dem          = 0.10   # |U_mf_SPH - U_mf_DEM| / U_mf_DEM (continuum vs discrete)
 tol_wenyu        = 0.20   # |U_mf_SPH - U_mf_WenYu| / U_mf_WenYu (fluidization scatter)
 umf_err_floor    = 0.005  # non-tautology floor: measured vs-WenYu err must exceed this

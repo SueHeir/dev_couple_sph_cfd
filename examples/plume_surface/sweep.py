@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run plume_surface and plot the validation checks from its own output."""
+"""Run the packed-bed regression and render diagnostic output."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def parse_output(text: str) -> dict[str, object]:
         text,
         "negative controls",
     )
-    result = must(r"VALIDATION: (PASS|FAIL).*", text, "verdict").group(0)
+    result = must(r"REGRESSION: (PASS|FAIL).*", text, "regression verdict").group(0)
 
     sweep = []
     row_re = re.compile(
@@ -129,7 +129,7 @@ def render_svg(data: dict[str, object]) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
         '<rect width="100%" height="100%" fill="#ffffff"/>',
         '<style>text{font-family:Arial,Helvetica,sans-serif}.small{font-size:12px;fill:#52616f}</style>',
-        text(36, 34, "plume_surface validation: U_mf references, fault controls, and live pressure sweep", 20, weight="700"),
+        text(36, 34, "packed-bed force-transfer regression: diagnostics and fault controls", 20, weight="700"),
         text(36, 58, str(data["result"]), 13),
     ]
 
@@ -156,10 +156,10 @@ def render_svg(data: dict[str, object]) -> str:
         parts.append(text(x, top + height + 24, f"{v:.3f}", 11, "middle"))
     parts.append(text(left + width / 2, top + height + 52, "superficial velocity U_mf [m/s]", 13, "middle"))
 
-    # Tolerance bands are drawn around the two references so the pass/fail gate is visible.
+    # Regression bands are frozen local guardrails, not uncertainty or validation bounds.
     for ref, tol, color, y0, label in [
-        (dem, tol_dem, "#d8f3dc", top + 54, f"DEM-CFD +/- {data['tol_dem']:.0f}%"),
-        (wenyu, tol_wenyu, "#dbeafe", top + 138, f"Wen-Yu +/- {data['tol_wenyu']:.0f}%"),
+        (dem, tol_dem, "#d8f3dc", top + 54, f"same-seam regression +/- {data['tol_dem']:.0f}%"),
+        (wenyu, tol_wenyu, "#dbeafe", top + 138, f"Wen-Yu regression +/- {data['tol_wenyu']:.0f}%"),
     ]:
         x0 = sx(ref * (1.0 - tol), xmin, xmax, left, width)
         x1 = sx(ref * (1.0 + tol), xmin, xmax, left, width)
@@ -168,8 +168,8 @@ def render_svg(data: dict[str, object]) -> str:
 
     rows = [
         ("SPH measured", sph, "#2f80ed"),
-        ("DEM-CFD ref", dem, "#219653"),
-        ("Wen-Yu ref", wenyu, "#8e44ad"),
+        ("same-seam DEM", dem, "#219653"),
+        ("Wen-Yu comparator", wenyu, "#8e44ad"),
         ("omit grad-P", omit_gradp, "#d64545"),
         ("eps-power bug", eps_bug, "#d64545"),
     ]

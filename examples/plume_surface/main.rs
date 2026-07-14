@@ -1,13 +1,10 @@
-//! **Coupled SPH–CFD plume/surface interaction — the DYNAMIC minimum-fluidization
-//! limit, cross-validated against the resolved DEM–CFD reference.**
+//! **SPH--FIELD packed-bed force-transfer regression.**
 //!
-//! A rocket exhaust plume impinging on a granular surface fluidizes and erodes it.
-//! The clean, *validatable* reduction of that problem is its **minimum-fluidization
-//! limit**: a gas driven vertically (+z) through a granular bed, where the
-//! literature-anchored observable is the **minimum fluidization velocity** `U_mf` —
-//! the superficial gas velocity at which the interphase load on the bed first
-//! offloads its submerged weight and the packing unlocks (below it the bed stays
-//! packed; above it the bed lifts / fluidizes / erodes).
+//! This program is a software regression for a homogeneous packed bed. It imposes
+//! an interstitial gas velocity; it does not solve a nozzle flow, advance an
+//! impinging plume, form a crater, or predict erosion/ejecta. `U_mf` is reported
+//! as a diagnostic for the force-transfer seam, not accepted as plume-surface
+//! validation.
 //!
 //! ## What is new here (the goal): the granular phase is a μ(I) SPH CONTINUUM
 //!
@@ -26,29 +23,19 @@
 //! fraction), while the GRAIN diameter `d` fed to the packed-bed closure is the
 //! physical grain size from config — the two are distinct (a parcel is many grains).
 //!
-//! ## Acceptance = cross-method agreement against the resolved DEM–CFD reference
+//! ## What the regression does and does not establish
 //!
-//! No clean analytic benchmark exists for a fluidizing continuum, so acceptance is
-//! **cross-method agreement**: the SPH-continuum `U_mf`, measured through the live
-//! coupled seam, must agree with (i) the **discrete DEM–CFD** `U_mf` measured through
-//! the *identical* seam (the resolved DEM–CFD reference — the merged
-//! `fluidized_bed_umf` / dev_field_efvm PR #6 fluidization case, reproduced in-example on
-//! the same grains), and (ii) the independent **Wen & Yu (1966)** correlation. Both
-//! `U_mf`s are MEASURED (bisection on the live net seam force), not asserted on paper.
+//! The live seam uses the MacDonald et al. (1979) packed-bed closure. It reports
+//! Wen--Yu (1966) and an identical-seam discrete packing only as diagnostic
+//! comparators. The latter shares the coupling implementation and is therefore a
+//! consistency check, not independent evidence. The executable fault controls
+//! demonstrate sensitivity to two implementation mistakes; they are not an
+//! experimental validation. Numerical thresholds are frozen regression settings,
+//! not uncertainty bounds and not acceptance criteria for a plume claim.
 //!
-//! ## Non-tautology (the anti-gaming bar the reviewer set for PR #5)
-//!
-//! The gate must be capable of FAILING if the coupling is wrong. Exactly as in
-//! `fixed_bed_ergun` / `fluidized_bed_umf`, the MEASURED interphase force is
-//! assembled from the *independent* **MacDonald et al. (1979)** packed-bed closure
-//! (`180 / 1.8`), which shares **no constant** with the Ergun-based Wen & Yu (1966)
-//! reference (`150 / 1.75` → `33.7 / 0.0408`). The measured `U_mf` therefore differs
-//! from Wen & Yu by a genuine, non-zero spread (the documented inter-correlation
-//! difference, well inside Wen & Yu's ~34 % scatter), NOT by construction. Two
-//! **negative controls RUN inside the gate** and must push `U_mf` outside tolerance:
-//! (A) dropping the pressure-gradient (∇P) force — a real CFD–DEM mistake that
-//! shifts `U_mf` by ~1/ε; (B) the `ε²`-instead-of-`ε³` reduction bug. If either
-//! control failed to move the answer, the gate is vacuous and the run FAILS.
+//! A plume/crater claim is blocked pending the external, held-out, matched-observable
+//! protocol in `EXTERNAL_VALIDATION.md`. That protocol requires an adversarial
+//! wrong-coupling comparison and cannot be satisfied by this program's output.
 //!
 //! ## The total fluid force — drag AND the ∇P (generalized-buoyancy) force
 //!
@@ -59,40 +46,14 @@
 //! force** `+V_p β u_rel/ε` (Σ = (1−ε)·(dP/L)·V_bed). Only their sum `= (dP/L)·V_bed`
 //! balances the buoyant bed weight at the correct velocity.
 //!
-//! ## Imposed flow (the falsifiability is in the closure, not a flow solve)
+//! ## Imposed flow
 //!
 //! As in `fluidized_bed_umf`, the interstitial gas velocity `u_g = U/ε` is **imposed**
 //! in the coupled cells rather than obtained from a compressible flow solve: a
 //! porosity-weighted momentum solve through a dense bed is the resolved-track story,
 //! out of scope for the unresolved seam, and the near-incompressible transient is far
-//! slower than the bed response (the PR #5 first draft relied on the solve and its bed
-//! never saw the flow). Falsifiability comes from the independent drag reference, the
-//! dynamic force balance, and the negative controls. Everything case-specific is TOML.
-//!
-//! ## Gated checks (all can fail; the negative controls + dynamics prove it)
-//!
-//! The *falsifiable independent* checks are #2 (an independent correlation), #4
-//! (negative controls that RUN and must fail), and #5 (the live coupled evolution,
-//! which vanishes if the coupling is broken). Check #1 is a same-closure cross-method
-//! **consistency** statement — with the same grains at the same voidage the continuum
-//! MUST reproduce the discrete bed's `U_mf` (physics), so it is ~0 by design and is
-//! reported as consistency, NOT counted as independent validation (per the reviewer's
-//! "relabel as self-consistency" note on the PR #5 tautology).
-//!
-//!  1. **Cross-method reproduction (consistency) vs DEM–CFD** —
-//!     `|U_mf^SPH − U_mf^DEM|/U_mf^DEM ≤ tol_dem`, both measured through the identical
-//!     live seam (μ(I) continuum vs discrete FCC grains) at `ε_bed`.
-//!  2. **Independent correlation (falsifiable)** —
-//!     `|U_mf^SPH − U_mf^WenYu|/U_mf^WenYu ≤ tol_wenyu`; MacDonald measured vs the
-//!     Ergun-based Wen & Yu reference ⇒ a genuine, non-zero spread.
-//!  3. **Non-tautology floor** — the vs-Wen&Yu error must exceed `umf_err_floor`.
-//!  4. **Negative controls (falsifiable)** — omit-∇P and ε-power-bug `U_mf` both
-//!     exceed `tol_wenyu` (proof the gate can fail).
-//!  5. **Dynamical fluidization (falsifiable, live coupled evolution)** — the SPH
-//!     continuum, stepped in the coupled loop, must FLUIDIZE above `U_mf` (net upward
-//!     COM velocity, grain-contact pressure collapsing toward 0) and stay PACKED below
-//!     (finite contact pressure), with a monotone contact-pressure sweep through onset.
-//!  6. **Deposition fidelity / regime / momentum** — sanity gates.
+//! slower than the bed response. Everything case-specific is TOML. The checks below
+//! are retained to catch unintended code changes, not to establish physical validity.
 //!
 //! ```text
 //! cargo run --release --example plume_surface -- examples/plume_surface/config.toml
@@ -435,9 +396,11 @@ fn main() {
     let err_epsbug = (umf_epsbug - umf_wy).abs() / umf_wy;
     let neg_ok = err_nopg > valid.tol_wenyu && err_epsbug > valid.tol_wenyu;
 
-    println!("# Coupled SPH-CFD plume/surface — DYNAMIC minimum-fluidization limit (U_mf)");
+    println!("# SPH--FIELD packed-bed force-transfer regression (U_mf diagnostic)");
     println!("# MEASURED force: INDEPENDENT MacDonald et al. (1979) 180/1.8 closure via the seam (drag + grad-P)");
-    println!("# REFERENCES:     resolved DEM-CFD (discrete FCC, same seam) + Wen & Yu (1966) correlation");
+    println!(
+        "# COMPARATORS:    discrete FCC uses the same seam; Wen & Yu is a packed-bed correlation"
+    );
     println!(
         "# gas: rho={} mu={:.3e} p={:.3e}   grain d={:.3e} m   rho_s={} rho_f={}",
         gas.rho, gas.mu, gas.p, bed.grain_d, bed.rho_s, gas.rho
@@ -447,11 +410,11 @@ fn main() {
     println!("#");
     println!("# ── minimum fluidization velocity U_mf [m/s] ───────────────────");
     println!("# SPH continuum (seam, MacDonald, drag+gradP) : {umf_sph:.5}   <- the coupled-continuum measurement");
-    println!("# Wen & Yu 1966 correlation (INDEPENDENT ref) : {umf_wy:.5}   rel.err {:.2}%  (tol {:.1}%)  <- the falsifiable check", 100.0 * err_wy, 100.0 * valid.tol_wenyu);
-    println!("# DEM discrete  (seam, MacDonald, drag+gradP) : {umf_dem:.5}   cross-method rel.err {:.2}%  (tol {:.1}%)  <- same-closure consistency: continuum reproduces the discrete bed at ε_bed", 100.0 * err_dem, 100.0 * valid.tol_dem);
+    println!("# Wen & Yu 1966 correlation (packed-bed comparator) : {umf_wy:.5}   rel.err {:.2}%  (regression limit {:.1}%)", 100.0 * err_wy, 100.0 * valid.tol_wenyu);
+    println!("# DEM discrete  (same seam, MacDonald, drag+gradP) : {umf_dem:.5}   consistency rel.err {:.2}%  (regression limit {:.1}%)", 100.0 * err_dem, 100.0 * valid.tol_dem);
     println!("# analytic brackets: Ergun(150/1.75)={umf_erg:.5} ({:+.2}% vs WenYu)  MacDonald(180/1.8)={umf_mac:.5} ({:+.2}% vs WenYu)", 100.0 * (umf_erg / umf_wy - 1.0), 100.0 * (umf_mac / umf_wy - 1.0));
-    println!("# non-tautology: vs-WenYu err {:.2}% > floor {:.1}% (independent MacDonald closure, not self-comparison)", 100.0 * err_wy, 100.0 * valid.umf_err_floor);
-    println!("# negative controls: omit-gradP {umf_nopg:.4} ({:+.1}%)  eps-power-bug {umf_epsbug:.4} ({:+.1}%)  => {} (must exceed tol {:.1}%)",
+    println!("# diagnostic spread vs WenYu {:.2}% (MacDonald and Wen--Yu are distinct packed-bed closures)", 100.0 * err_wy);
+    println!("# fault controls: omit-gradP {umf_nopg:.4} ({:+.1}%)  eps-power-bug {umf_epsbug:.4} ({:+.1}%)  => {} (must exceed regression limit {:.1}%)",
         100.0 * (umf_nopg / umf_wy - 1.0), 100.0 * (umf_epsbug / umf_wy - 1.0),
         if neg_ok { "both FAIL as required" } else { "a control DID NOT FAIL — gate vacuous!" }, 100.0 * valid.tol_wenyu);
     println!("# deposition fidelity: worst |eps_cell-eps_bed|/eps_bed  SPH {:.2}%  DEM {:.2}%  (tol {:.1}%)", 100.0 * dep_err_sph, 100.0 * dep_err_dem, 100.0 * valid.tol_deposit_cell);
@@ -530,7 +493,7 @@ fn main() {
         && pass_mom
     {
         println!(
-            "VALIDATION: PASS  (U_mf SPH {umf_sph:.4} vs DEM {umf_dem:.4} {:.1}%<={:.0}% cross-method; vs Wen&Yu {umf_wy:.4} {:.1}%<={:.0}%; non-taut err>{:.0}% & neg-controls fail at {:+.0}%/{:+.0}%; live continuum fluidizes above U_mf & packed below; eps_bed={eps_bed:.3})",
+            "REGRESSION: PASS  (packed-bed force-transfer checks; not plume/crater validation; U_mf SPH {umf_sph:.4}; same-seam DEM {:.1}%<={:.0}%; WenYu comparator {:.1}%<={:.0}%; fault shifts {:+.0}%/{:+.0}%; eps_bed={eps_bed:.3})",
             100.0 * err_dem, 100.0 * valid.tol_dem,
             100.0 * err_wy, 100.0 * valid.tol_wenyu,
             100.0 * valid.umf_err_floor,
@@ -538,7 +501,7 @@ fn main() {
         );
     } else {
         println!(
-            "VALIDATION: FAIL  (dem_ok={pass_dem} wenyu_ok={pass_wy} nontrivial_ok={pass_nontrivial} dynamic_ok={dyn_ok} eps_ok={pass_eps} [{eps_bed:.3}] regime_ok={pass_regime} dep_ok={pass_dep} mom_ok={pass_mom})"
+            "REGRESSION: FAIL  (dem_ok={pass_dem} wenyu_ok={pass_wy} fault_sensitivity_ok={pass_nontrivial} dynamic_ok={dyn_ok} eps_ok={pass_eps} [{eps_bed:.3}] regime_ok={pass_regime} dep_ok={pass_dep} mom_ok={pass_mom})"
         );
         std::process::exit(1);
     }

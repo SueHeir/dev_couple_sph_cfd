@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640">
 <rect width="100%" height="100%" fill="#ffffff"/>
 <style>text{font-family:Arial,Helvetica,sans-serif}.small{font-size:12px;fill:#52616f}</style>
-<text x="36.0" y="34.0" font-size="20" text-anchor="start" font-weight="700" fill="#1f2933">plume_surface validation: U_mf references, fault controls, and live pressure sweep</text>
-<text x="36.0" y="58.0" font-size="13" text-anchor="start" font-weight="400" fill="#1f2933">VALIDATION: PASS  (U_mf SPH 0.1831 vs DEM 0.1831 0.0%&lt;=10% cross-method; vs Wen&amp;Yu 0.1885 2.9%&lt;=20%; non-taut err&gt;0% &amp; neg-controls fail at +118%/-59%; live continuum fluidizes above U_mf &amp; packed below; eps_bed=0.400)</text>
+<text x="36.0" y="34.0" font-size="20" text-anchor="start" font-weight="700" fill="#1f2933">packed-bed force-transfer regression: diagnostics and fault controls</text>
+<text x="36.0" y="58.0" font-size="13" text-anchor="start" font-weight="400" fill="#1f2933">REGRESSION: historical local run only; not plume/crater validation. Regenerate with sweep.py in a supported MPI toolchain.</text>
 <text x="74.0" y="78.0" font-size="15" text-anchor="start" font-weight="700" fill="#1f2933">Measured U_mf vs references and negative controls</text>
 <line x1="74.0" y1="98.0" x2="74.0" y2="508.0" stroke="#9aa5b1" stroke-width="1"/>
 <line x1="74.0" y1="508.0" x2="504.0" y2="508.0" stroke="#9aa5b1" stroke-width="1"/>

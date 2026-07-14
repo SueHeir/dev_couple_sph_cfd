@@ -7,16 +7,17 @@ minimum-fluidization limit. Its gas velocity is imposed every coupling tick;
 the live force hand-off, compares it with Wen-Yu, runs two fault controls that
 must move outside tolerance, and sweeps the coupled bed through onset.
 
-![plume_surface validation result](plots/plume_surface_validation.svg)
+![packed-bed regression diagnostics](plots/plume_surface_validation.svg)
 
 The plot is generated from `sweep.py`, which runs the example and parses its own
-reported `U_mf` values, tolerance checks, negative controls, and dynamic pressure
-sweep. The current committed figure shows `VALIDATION: PASS` for this limited
-seam regression only. Its DEM comparison is same-seam consistency, not
+reported `U_mf` values, frozen regression limits, fault controls, and dynamic
+pressure sweep. Its `REGRESSION: PASS` means only that this local software
+configuration reproduced its specified force-transfer checks. Its DEM comparison
+is same-seam consistency, while Wen--Yu is a packed-bed comparator; neither is
 independent PSI evidence. It is not evidence for an advancing impinging-jet
-crater, erosion-rate, or ejecta prediction; see
-[`../psi_evidence/`](../psi_evidence/) for the fail-closed external-evidence
-requirements for that separate claim.
+crater, erosion-rate, or ejecta prediction. The only admissible route to that
+claim is the held-out, adversarial protocol in
+[`EXTERNAL_VALIDATION.md`](EXTERNAL_VALIDATION.md).
 
 ```bash
 python3 examples/plume_surface/sweep.py
