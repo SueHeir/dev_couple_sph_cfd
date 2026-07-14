@@ -114,6 +114,23 @@ struct RunCfg {
     dyn_steps: usize,
 }
 
+/// This example has a deliberately narrow forcing model.  Keeping that choice
+/// in the case file, and rejecting anything else, prevents a renamed or edited
+/// case from being mistaken for an advancing nozzle/plume calculation.
+#[derive(Deserialize)]
+struct FlowCfg {
+    model: String,
+}
+
+fn require_imposed_uniform_flow(flow: &FlowCfg) {
+    const SUPPORTED: &str = "imposed_uniform_interstitial_velocity";
+    assert_eq!(
+        flow.model, SUPPORTED,
+        "plume_surface is a packed-bed seam regression: it supports only \
+         `{SUPPORTED}`, not a nozzle, plume, crater, or erosion model"
+    );
+}
+
 #[derive(Deserialize, Default)]
 struct ValidationCfg {
     /// |U_mf^SPH − U_mf^DEM| / U_mf^DEM (cross-method, continuum vs discrete grains).
@@ -259,7 +276,9 @@ fn main() {
     let grav: GravityCfg = cfg.section("gravity");
     let dem: DemCfg = cfg.section("dem");
     let run: RunCfg = cfg.section("run");
+    let flow: FlowCfg = cfg.section("flow");
     let valid: ValidationCfg = cfg.section("validation");
+    require_imposed_uniform_flow(&flow);
     let g = grav.gz.abs();
 
     // ── Part A: settle the μ(I) continuum bed, measure ε_bed + settled contact p ──

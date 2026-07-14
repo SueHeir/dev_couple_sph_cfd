@@ -17,14 +17,18 @@ observation times, and measurement uncertainty.
 NASA's PSI program describes controlled plume--surface testing, but its public
 program pages and NTRS reports are **not** treated here as numerical data:
 
-- NASA NTRS, *Plume Surface Interaction Physics Focused Ground Test*, 2021,
+- NASA NTRS, Eberhart, Korzun & West, *Overview of Plume-Surface Interaction
+  Data from Subscale Inert Gas Testing at NASA MSFC Test Stand 300 Vacuum
+  Facilities*, 2021,
   https://ntrs.nasa.gov/citations/20210016650
 - NASA, *What a Blast: NASA Langley Begins Plume Surface Interaction Tests*,
   https://www.nasa.gov/general/what-a-blast-nasa-langley-begins-plume-surface-interaction-tests/
 
-These sources establish that an appropriate experimental program exists; they do
-not supply a matched, machine-readable acceptance series in this repository.
-They therefore cannot be used to mark a simulation pass.
+The NTRS record (checked 2026-07-14) describes varied nozzle height, mass flow,
+ambient pressure, regolith simulant, and time-resolved crater/ejecta diagnostics.
+It is relevant external context, but its public record/abstract is not a
+machine-readable, case-matched acceptance series in this repository. Neither
+source can be used to mark a simulation pass.
 
 ## Pre-registered comparison
 

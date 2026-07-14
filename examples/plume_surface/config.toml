@@ -18,6 +18,11 @@ rho = 1.2          # kg/m^3  (air)
 p   = 1.0e5        # Pa
 mu  = 1.8e-5       # Pa.s    (air dynamic viscosity)
 
+[flow]
+# This executable accepts only this explicitly imposed, spatially uniform flow.
+# It is deliberately not a nozzle boundary condition or an advancing CFD solve.
+model = "imposed_uniform_interstitial_velocity"
+
 [bed]
 # μ(I) granular material (glass-like) — the dev_soil_sph SPH continuum.
 rho_s        = 2500.0    # grain (solid) density kg/m^3

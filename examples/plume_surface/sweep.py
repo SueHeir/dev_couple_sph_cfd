@@ -51,19 +51,19 @@ def must(pattern: str, text: str, label: str) -> re.Match[str]:
 def parse_output(text: str) -> dict[str, object]:
     sph = float(must(r"SPH continuum .* : ([0-9.]+)", text, "SPH U_mf").group(1))
     wen_m = must(
-        r"Wen & Yu 1966 correlation .* : ([0-9.]+)\s+rel.err ([0-9.]+)%\s+\(tol ([0-9.]+)%\)",
+        r"Wen & Yu 1966 correlation .* : ([0-9.]+)\s+rel.err ([0-9.]+)%\s+\(regression limit ([0-9.]+)%\)",
         text,
         "Wen-Yu U_mf",
     )
     dem_m = must(
-        r"DEM discrete .* : ([0-9.]+)\s+cross-method rel.err ([0-9.]+)%\s+\(tol ([0-9.]+)%\)",
+        r"DEM discrete .* : ([0-9.]+)\s+consistency rel.err ([0-9.]+)%\s+\(regression limit ([0-9.]+)%\)",
         text,
         "DEM-CFD U_mf",
     )
     neg_m = must(
-        r"negative controls: omit-gradP ([0-9.]+) \(([+-][0-9.]+)%\)\s+eps-power-bug ([0-9.]+) \(([+-][0-9.]+)%\)",
+        r"fault controls: omit-gradP ([0-9.]+) \(([+-][0-9.]+)%\)\s+eps-power-bug ([0-9.]+) \(([+-][0-9.]+)%\)",
         text,
-        "negative controls",
+        "fault controls",
     )
     result = must(r"REGRESSION: (PASS|FAIL).*", text, "regression verdict").group(0)
 
@@ -227,7 +227,7 @@ def render_svg(data: dict[str, object]) -> str:
     parts.append(text(right + rwidth / 2, rtop + rheight + 52, "superficial velocity factor U/U_mf", 13, "middle"))
     parts.append(text(right - 48, rtop + rheight / 2, "contact pressure fraction p/p0", 13, "middle"))
 
-    parts.append(text(36, 602, f"Negative-control shifts vs Wen-Yu: omit grad-P {data['omit_gradp_shift']:+.1f}%, eps-power bug {data['eps_bug_shift']:+.1f}%.", 13))
+    parts.append(text(36, 602, f"Fault-control shifts vs Wen-Yu: omit grad-P {data['omit_gradp_shift']:+.1f}%, eps-power bug {data['eps_bug_shift']:+.1f}%.", 13))
     parts.append("</svg>")
     return "\n".join(parts)
 

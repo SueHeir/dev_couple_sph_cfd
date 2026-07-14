@@ -5,7 +5,8 @@ minimum-fluidization limit. Its gas velocity is imposed every coupling tick;
 `CfdStatePlugin` and `IdealGasPlugin` are present as the data carrier, but no
 `SolverPlugin` advances a CFD field. It measures the SPH-continuum `U_mf` from
 the live force hand-off, compares it with Wen-Yu, runs two fault controls that
-must move outside tolerance, and sweeps the coupled bed through onset.
+must move outside the frozen local regression limit, and sweeps the coupled bed
+through onset.
 
 ![packed-bed regression diagnostics](plots/plume_surface_validation.svg)
 
