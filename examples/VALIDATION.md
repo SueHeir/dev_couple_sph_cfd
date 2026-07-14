@@ -15,6 +15,16 @@ closed if a public record changes or cannot be retrieved, but it is not a
 physical acceptance criterion and is intentionally absent from the executable
 validation manifest.
 
+## Boundary-driven CFD/SPH jet case (exploratory)
+
+[The jet_crater case](jet_crater/README.md) restores an advancing CFD inflow
+and port-coupled SPH surface response.  Its committed eligibility figure and
+external-reference audit deliberately report **INELIGIBLE**, not a PSI pass:
+the available Metzger et al. crater trace has a different circular geometry,
+gas/material, grain range, duration, and observable.  This is executable seam
+evidence plus a fail-closed reference check, not acceptance evidence for the
+pending plume/crater goal.
+
 ## Coupled SPH-CFD packed-bed seam smoke case
 
 [The packed_bed_seam smoke case](packed_bed_seam/README.md) runs the live SPH-CFD

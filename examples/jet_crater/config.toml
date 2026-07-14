@@ -1,0 +1,96 @@
+# Jet–crater erosion: CFD gas wall-jet driving a granular-SPH free surface through
+# the GRASS coupling seam (exchange ports). Bagnold/Shields and Roberts provide
+# modelling context only; this configuration is not externally PSI-validated.
+#
+# DECLARATIVE case data only — every physical constant, sweep point and tolerance
+# lives here; the example reads it and never hard-codes case values. See the
+# example header for the full rationale and references.
+
+[gas]
+rho = 1.0          # gas density ρ_f (kg/m³)  (a thin planetary / near-surface plume gas)
+p   = 1.0e5        # gas pressure (Pa)
+mu  = 1.8e-5       # dynamic viscosity μ (Pa·s)  (air-like)
+
+[bed]
+rho_s        = 1500.0     # grain (solid) density ρ_s (kg/m³)  (regolith-like)
+rho_c        = 1500.0     # continuum reference density for the EOS
+mu_s         = 0.38       # μ(I) static friction  → tan(φ_repose)=μ_s (bed material property)
+mu_2         = 0.64       # μ(I) high-I friction
+i0           = 0.30       # μ(I) inertial-number scale
+bulk_modulus = 5.0e4      # EOS bulk modulus (Pa)  (soft, for a stable explicit dt)
+poisson      = 0.3
+grain_d      = 3.0e-3     # BASELINE grain diameter d (m) for the live coupled run
+restitution  = 0.6
+rest_density = 1500.0
+spacing      = 4.0e-3     # SPH parcel spacing (m)
+x_lo         = 0.0
+x_hi         = 0.24
+y_lo         = 0.0
+y_hi         = 0.016      # thin slab → quasi-2D (x–z) planar jet
+z_lo         = 0.0
+z_hi         = 0.032      # settled bed top (~8 layers)
+floor_thickness = 0.012
+settle_steps = 4000
+sph_dt       = 2.0e-5
+
+[gravity]
+gz = -9.81               # Earth-surface baseline; Part B sweeps g for the reduced-gravity trend
+
+[grid]
+nx   = 60
+ny   = 4
+nz   = 16
+ng   = 2
+z_hi = 0.12               # gas domain extends well above the bed
+
+[jet]
+# Planar impinging jet: centred at x_center, spreads along the surface as a wall jet.
+# Near-surface horizontal gas speed u_g(x)=U_peak·(|ξ|/a)·exp(1−|ξ|/a), ξ=x−x_center,
+# so u_g(0)=0 at the stagnation line and peaks at |ξ|=a (Glauert 1956 wall-jet shape;
+# the Roberts (1963) signature is the OFF-AXIS shear peak, not the exact profile).
+x_center = 0.12
+a        = 0.045          # wall-jet peak offset from the stagnation line (m)
+surface_band = 0.006      # near-surface gas layer thickness the profile is imposed in (m)
+
+[loglaw]
+# Universal rough-wall log-law constants used ONLY to convert the recovered
+# near-surface onset slip u_gc into a friction velocity u* for the Bagnold-A anchor:
+#   u* = u_gc · κ / ln(z_ref/z0),  z_ref = grain top ≈ d,  z0 = d/roughness_ratio.
+# κ (von Kármán) and z0=d/30 (Nikuradse rough-wall) are textbook, NOT fitted.
+kappa           = 0.41
+roughness_ratio = 30.0
+
+[scaling]
+# Reduced-gravity trend (Part B, falsifiable): erosion onset must scale u_gc ∝ g^{1/2}
+# (Bagnold/Shields submerged-weight balance) — the reduced-gravity behaviour that is
+# central to lunar/Mars plume-surface interaction. Sweep gravity Moon→Mars→Earth at
+# fixed grain. (Exponent is broadened from 0.5 to allow the Schiller–Naumann C_d(Re)
+# drift over the sweep; a g-INDEPENDENT cohesive resistance gives ~0 and fails.)
+g_list = [1.62, 3.71, 9.81]        # Moon, Mars, Earth surface gravity (m/s²)
+
+[run]
+# Live coupled sweep (Part C): U_peak factors × the baseline erosion onset u_gc.
+# MUST bracket 1.0 (some below onset, some above) so the falsifiable threshold shows.
+u_factors = [0.5, 1.8, 3.0]
+dyn_steps = 800
+
+[validation]
+# ── Part B: independent Bagnold threshold anchor + reduced-gravity trend ──
+# Recovered Bagnold coefficient A = u*/sqrt((ρ_s−ρ_f)/ρ_f · g · d) must land in the
+# published aerodynamic-threshold band around Bagnold (1941) A≈0.1 / Iversen–White
+# (1982). Built from the INDEPENDENT Schiller–Naumann C_d + the universal log-law,
+# NOT from A, so a genuine non-zero spread from 0.10 is expected (non-tautology).
+bagnold_a_ref = 0.10
+bagnold_a_lo  = 0.06
+bagnold_a_hi  = 0.20
+bagnold_a_err_floor = 0.05    # |A_meas−0.10|/0.10 must exceed this (independent closure)
+# Reduced-gravity exponent u_gc ∝ g^p: p must land in this band; a cohesive control gives ~0.
+grav_exponent_lo = 0.40
+grav_exponent_hi = 0.72
+
+# ── Part C: live coupled erosion through the grass Port seam (falsifiable) ──
+# Above onset surface grains ENTRAIN (n_eroding>0) and MOVE (mean eroding speed >
+# erode_min_hspeed); below onset and with a severed port NOTHING entrains (n_eroding=0).
+erode_min_hspeed = 0.01       # m/s — mean entrained-grain speed floor (they must actually move)
+# `jet` geometry remains recorded for diagnostics. It is no longer a Roberts
+# localization acceptance gate: no digitized, geometry-matched Roberts datum exists.
