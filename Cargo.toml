@@ -11,6 +11,13 @@ publish = false
 [workspace]
 members = ["crates/sph_cfd"]
 
+[features]
+# Expose the optional distributed-routing capability at the package boundary
+# used by the documented example and CI.  Keeping this opt-in avoids making
+# MPI a dependency of the local packed-bed seam smoke case.
+default = []
+mpi-routing = ["sph_cfd/mpi-routing"]
+
 [[example]]
 name = "packed_bed_seam"
 path = "examples/packed_bed_seam/main.rs"
@@ -18,6 +25,11 @@ path = "examples/packed_bed_seam/main.rs"
 [[example]]
 name = "uniform_inflow_surface_seam"
 path = "examples/jet_crater/main.rs"
+
+[[example]]
+name = "routed_sph_cfd"
+path = "examples/routed_sph_cfd/main.rs"
+required-features = ["mpi-routing"]
 
 # ---------------------------------------------------------------------------
 # This repo is a COUPLING: it depends on BOTH partner tiers and joins their
