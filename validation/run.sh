@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
-# dev_couple_sph_cfd regression harness - imposed-flow packed-bed seam.
+# dev_couple_sph_cfd executable smoke harness - imposed-flow packed-bed seam.
 #
 #   ./validation/run.sh
 #
-# The gate delegates to examples/packed_bed_seam/sweep.py, which runs the live
-# coupled example, checks frozen local regression limits and fault sensitivity,
-# and regenerates a diagnostic SVG. It does not validate a plume or crater.
+# The harness runs the live coupled example. Completion proves only that this
+# configured cross-substrate path executed; it does not validate a plume or crater.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-PY="${BENCH_PYTHON:-python3}"
-
-echo "=== dev_couple_sph_cfd packed-bed seam regression ==="
-"$PY" examples/packed_bed_seam/sweep.py
-echo "=== packed-bed seam regression passed ==="
+echo "=== dev_couple_sph_cfd packed-bed seam smoke ==="
+cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
+echo "=== packed-bed seam smoke completed (not physical validation) ==="

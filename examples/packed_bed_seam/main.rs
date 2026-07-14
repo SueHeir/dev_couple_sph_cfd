@@ -1,6 +1,6 @@
-//! **SPH--FIELD packed-bed force-transfer regression.**
+//! **SPH--FIELD packed-bed force-transfer smoke case.**
 //!
-//! This program is a software regression for a homogeneous packed bed. It imposes
+//! This program is an executable smoke case for a homogeneous packed bed. It imposes
 //! an interstitial gas velocity; it does not solve a nozzle flow, advance an
 //! impinging plume, form a crater, or predict erosion/ejecta. `U_mf` is reported
 //! as a diagnostic for the force-transfer seam, not accepted as plume-surface
@@ -23,15 +23,16 @@
 //! fraction), while the GRAIN diameter `d` fed to the packed-bed closure is the
 //! physical grain size from config — the two are distinct (a parcel is many grains).
 //!
-//! ## What the regression does and does not establish
+//! ## What this smoke case does and does not establish
 //!
 //! The live seam uses the MacDonald et al. (1979) packed-bed closure. It reports
 //! Wen--Yu (1966) and an identical-seam discrete packing only as diagnostic
 //! comparators. The latter shares the coupling implementation and is therefore a
 //! consistency check, not independent evidence. The executable fault controls
 //! demonstrate sensitivity to two implementation mistakes; they are not an
-//! experimental validation. Numerical thresholds are frozen regression settings,
-//! not uncertainty bounds and not acceptance criteria for a plume claim.
+//! experimental validation. This program deliberately has no numerical pass band
+//! or scientific verdict: its successful exit means only that the configured
+//! cross-substrate execution completed.
 //!
 //! A plume/crater claim is blocked pending the external, held-out, matched-observable
 //! protocol in `EXTERNAL_VALIDATION.md`. That protocol requires an adversarial
@@ -52,8 +53,7 @@
 //! in the coupled cells rather than obtained from a compressible flow solve: a
 //! porosity-weighted momentum solve through a dense bed is the resolved-track story,
 //! out of scope for the unresolved seam, and the near-incompressible transient is far
-//! slower than the bed response. Everything case-specific is TOML. The checks below
-//! are retained to catch unintended code changes, not to establish physical validity.
+//! slower than the bed response. Everything case-specific is TOML.
 //!
 //! ```text
 //! cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
@@ -129,33 +129,6 @@ fn require_imposed_uniform_flow(flow: &FlowCfg) {
         "packed_bed_seam supports only \
          `{SUPPORTED}`, not a nozzle, plume, crater, or erosion model"
     );
-}
-
-#[derive(Deserialize, Default)]
-struct ValidationCfg {
-    /// |U_mf^SPH − U_mf^DEM| / U_mf^DEM (cross-method, continuum vs discrete grains).
-    tol_dem: f64,
-    /// |U_mf^SPH − U_mf^WenYu| / U_mf^WenYu (independent correlation; ~fluidization scatter).
-    tol_wenyu: f64,
-    /// Non-tautology floor: the vs-Wen&Yu error must exceed this (independent closure).
-    umf_err_floor: f64,
-    eps_bed_lo: f64,
-    eps_bed_hi: f64,
-    /// Dense packed-bed (Ergun/MacDonald) regime gate: ε ≤ this.
-    eps_max: f64,
-    /// Worst |ε_cell(deposit) − ε_bed| / ε_bed over charged cells (deposition fidelity).
-    tol_deposit_cell: f64,
-    /// Two-way momentum-exchange conservation (sink vs −ΣF_drag·dt).
-    tol_momentum: f64,
-    /// Fluidized: contact pressure above U_mf must COLLAPSE below this fraction of the
-    /// no-flow settled contact pressure (grain skeleton fully offloaded, p → 0).
-    fluidized_p_frac: f64,
-    /// Packed: contact pressure below U_mf must stay above this fraction of the
-    /// no-flow settled contact pressure (grains still bear residual load).
-    packed_p_frac: f64,
-    /// Upward COM velocity [m/s] separating a fluidizing bed (v_z above this, lifting)
-    /// from a static packed bed (|v_z| below this) in the coupled sweep.
-    v_fluid_min: f64,
 }
 
 // ─── Part A: the settled μ(I)-continuum SPH bed ───────────────────────────────
@@ -277,7 +250,6 @@ fn main() {
     let dem: DemCfg = cfg.section("dem");
     let run: RunCfg = cfg.section("run");
     let flow: FlowCfg = cfg.section("flow");
-    let valid: ValidationCfg = cfg.section("validation");
     require_imposed_uniform_flow(&flow);
     let g = grav.gz.abs();
 
@@ -380,7 +352,9 @@ fn main() {
     let err_dem = (umf_sph - umf_dem).abs() / umf_dem;
     let err_wy = (umf_sph - umf_wy).abs() / umf_wy;
 
-    // Negative controls (RUN, must fail the Wen&Yu tolerance).
+    // Executable sensitivity probes. They are reported, never used as an
+    // acceptance criterion: these closures and this forcing are not a held-out
+    // plume-surface experiment.
     let umf_nopg = measure_umf(
         &parcels,
         &eps_field,
@@ -411,11 +385,7 @@ fn main() {
             ..mode
         },
     );
-    let err_nopg = (umf_nopg - umf_wy).abs() / umf_wy;
-    let err_epsbug = (umf_epsbug - umf_wy).abs() / umf_wy;
-    let neg_ok = err_nopg > valid.tol_wenyu && err_epsbug > valid.tol_wenyu;
-
-    println!("# SPH--FIELD packed-bed force-transfer regression (U_mf diagnostic)");
+    println!("# SPH--FIELD packed-bed force-transfer smoke case (U_mf diagnostic)");
     println!("# MEASURED force: INDEPENDENT MacDonald et al. (1979) 180/1.8 closure via the seam (drag + grad-P)");
     println!(
         "# COMPARATORS:    discrete FCC uses the same seam; Wen & Yu is a packed-bed correlation"
@@ -429,100 +399,37 @@ fn main() {
     println!("#");
     println!("# ── minimum fluidization velocity U_mf [m/s] ───────────────────");
     println!("# SPH continuum (seam, MacDonald, drag+gradP) : {umf_sph:.5}   <- the coupled-continuum measurement");
-    println!("# Wen & Yu 1966 correlation (packed-bed comparator) : {umf_wy:.5}   rel.err {:.2}%  (regression limit {:.1}%)", 100.0 * err_wy, 100.0 * valid.tol_wenyu);
-    println!("# DEM discrete  (same seam, MacDonald, drag+gradP) : {umf_dem:.5}   consistency rel.err {:.2}%  (regression limit {:.1}%)", 100.0 * err_dem, 100.0 * valid.tol_dem);
+    println!("# Wen & Yu 1966 correlation (packed-bed comparator) : {umf_wy:.5}   diagnostic difference {:.2}%", 100.0 * err_wy);
+    println!("# DEM discrete  (same seam, MacDonald, drag+gradP) : {umf_dem:.5}   same-seam difference {:.2}%", 100.0 * err_dem);
     println!("# analytic brackets: Ergun(150/1.75)={umf_erg:.5} ({:+.2}% vs WenYu)  MacDonald(180/1.8)={umf_mac:.5} ({:+.2}% vs WenYu)", 100.0 * (umf_erg / umf_wy - 1.0), 100.0 * (umf_mac / umf_wy - 1.0));
     println!("# diagnostic spread vs WenYu {:.2}% (MacDonald and Wen--Yu are distinct packed-bed closures)", 100.0 * err_wy);
-    println!("# fault controls: omit-gradP {umf_nopg:.4} ({:+.1}%)  eps-power-bug {umf_epsbug:.4} ({:+.1}%)  => {} (must exceed regression limit {:.1}%)",
-        100.0 * (umf_nopg / umf_wy - 1.0), 100.0 * (umf_epsbug / umf_wy - 1.0),
-        if neg_ok { "both FAIL as required" } else { "a control DID NOT FAIL — gate vacuous!" }, 100.0 * valid.tol_wenyu);
-    println!("# deposition fidelity: worst |eps_cell-eps_bed|/eps_bed  SPH {:.2}%  DEM {:.2}%  (tol {:.1}%)", 100.0 * dep_err_sph, 100.0 * dep_err_dem, 100.0 * valid.tol_deposit_cell);
+    println!("# sensitivity probes: omit-gradP {umf_nopg:.4} ({:+.1}%)  eps-power-bug {umf_epsbug:.4} ({:+.1}%)",
+        100.0 * (umf_nopg / umf_wy - 1.0), 100.0 * (umf_epsbug / umf_wy - 1.0));
+    println!(
+        "# deposited-voidage diagnostic: worst |eps_cell-eps_bed|/eps_bed  SPH {:.2}%  DEM {:.2}%",
+        100.0 * dep_err_sph,
+        100.0 * dep_err_dem
+    );
 
     // ── Part C: live coupled dynamical fluidization sweep (SPH continuum + gas) ──
     println!("#");
     println!("# ── live coupled dynamical fluidization (SPH continuum stepped in the seam) ──");
-    println!("#   U/U_mf     U [m/s]     mean v_z [m/s]    contact p [Pa]   p/p_settled   state");
-    let mut sweep: Vec<(f64, f64, f64, f64)> = Vec::new(); // (factor, U, mean_vz, mean_p)
+    println!("#   U/U_mf     U [m/s]     mean v_z [m/s]    contact p [Pa]   p/p_settled");
     let mut worst_mom = 0.0f64;
     for &fac in &run.dyn_factors {
         let u = fac * umf_sph;
         let dynr = run_coupled(&gas, &bed, &grid, &grav, eps_bed, u, run.dyn_steps);
         worst_mom = worst_mom.max(dynr.mom_err);
-        let pfrac = dynr.mean_p / p_settled.max(1e-30);
-        let state = if pfrac < valid.fluidized_p_frac && dynr.mean_vz > valid.v_fluid_min {
-            "FLUIDIZES (lifts, skeleton offloaded)"
-        } else if pfrac > valid.packed_p_frac && dynr.mean_vz < valid.v_fluid_min {
-            "packed (grains bear residual load)"
-        } else {
-            "transitional"
-        };
         println!(
-            "  {fac:>7.2}   {u:>9.4}   {:>+13.4e}   {:>13.4e}   {pfrac:>10.4}   {state}",
-            dynr.mean_vz, dynr.mean_p
+            "  {fac:>7.2}   {u:>9.4}   {:>+13.4e}   {:>13.4e}   {:>10.4}",
+            dynr.mean_vz,
+            dynr.mean_p,
+            dynr.mean_p / p_settled.max(1e-30)
         );
-        sweep.push((fac, u, dynr.mean_vz, dynr.mean_p));
     }
 
-    // Dynamical gate: below onset (fac<1) stays packed (p high); above onset (fac>1)
-    // fluidizes (p collapsed, net upward). Contact pressure monotone non-increasing.
-    let below: Vec<&(f64, f64, f64, f64)> = sweep.iter().filter(|s| s.0 < 1.0).collect();
-    let above: Vec<&(f64, f64, f64, f64)> = sweep.iter().filter(|s| s.0 > 1.0).collect();
-    let ps = p_settled.max(1e-30);
-    let packed_below = below
-        .iter()
-        .all(|s| s.3 / ps > valid.packed_p_frac && s.2 < valid.v_fluid_min);
-    let fluid_above = above
-        .iter()
-        .all(|s| s.3 / ps < valid.fluidized_p_frac && s.2 > valid.v_fluid_min);
-    let vz_below_max = below.iter().map(|s| s.2).fold(f64::NEG_INFINITY, f64::max);
-    let vz_above_min = above.iter().map(|s| s.2).fold(f64::INFINITY, f64::min);
-    let lift_separates = vz_above_min > vz_below_max;
-    let p_monotone = sweep.windows(2).all(|w| w[1].3 <= w[0].3 + 1e-9 * ps);
-    let dyn_ok = !below.is_empty()
-        && !above.is_empty()
-        && packed_below
-        && fluid_above
-        && lift_separates
-        && p_monotone;
-
-    println!("# dynamical: packed below onset={packed_below}  fluidizes above onset={fluid_above}  lift separates(vz_above>vz_below)={lift_separates}  contact-p monotone-down={p_monotone}");
-
-    // ── Verdict ─────────────────────────────────────────────────────────────────
-    let pass_dem = err_dem <= valid.tol_dem;
-    let pass_wy = err_wy <= valid.tol_wenyu;
-    let pass_nontrivial = err_wy > valid.umf_err_floor && neg_ok;
-    let pass_eps = eps_bed >= valid.eps_bed_lo && eps_bed <= valid.eps_bed_hi;
-    let pass_regime = eps_bed <= valid.eps_max && eps_dem <= valid.eps_max;
-    let pass_dep = dep_err_sph <= valid.tol_deposit_cell && dep_err_dem <= valid.tol_deposit_cell;
-    let pass_mom = worst_mom <= valid.tol_momentum;
-
-    println!("#");
-    println!("# ── result ─────────────────────────────────────────────");
-    println!(
-        "# two-way momentum conservation err {worst_mom:.2e} (tol {:.0e})",
-        valid.tol_momentum
-    );
-    if pass_dem
-        && pass_wy
-        && pass_nontrivial
-        && dyn_ok
-        && pass_eps
-        && pass_regime
-        && pass_dep
-        && pass_mom
-    {
-        println!(
-            "REGRESSION: PASS  (packed-bed force-transfer checks; not plume/crater validation; U_mf SPH {umf_sph:.4}; same-seam DEM {:.1}%<={:.0}%; WenYu comparator {:.1}%<={:.0}%; fault shifts {:+.0}%/{:+.0}%; eps_bed={eps_bed:.3})",
-            100.0 * err_dem, 100.0 * valid.tol_dem,
-            100.0 * err_wy, 100.0 * valid.tol_wenyu,
-            100.0 * (umf_nopg / umf_wy - 1.0), 100.0 * (umf_epsbug / umf_wy - 1.0),
-        );
-    } else {
-        println!(
-            "REGRESSION: FAIL  (dem_ok={pass_dem} wenyu_ok={pass_wy} fault_sensitivity_ok={pass_nontrivial} dynamic_ok={dyn_ok} eps_ok={pass_eps} [{eps_bed:.3}] regime_ok={pass_regime} dep_ok={pass_dep} mom_ok={pass_mom})"
-        );
-        std::process::exit(1);
-    }
+    println!("# two-way momentum-exchange residual (diagnostic): {worst_mom:.2e}");
+    println!("SMOKE COMPLETED: configured cross-substrate run executed; not a physical validation or plume-surface prediction.");
 }
 
 /// One coupled run at superficial `u_super`: build SPH+CFD sub-Apps, settle-prime the

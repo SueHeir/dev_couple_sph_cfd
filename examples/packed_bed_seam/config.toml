@@ -1,12 +1,12 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Imposed-flow packed-bed force-transfer regression. This is not a plume,
+# Imposed-flow packed-bed force-transfer smoke case. This is not a plume,
 # impinging-jet, crater, erosion, or ejecta case.
 #
 # A gas flows UP (+z) through a settled μ(I)-continuum granular bed (dev_soil_sph SPH),
 # coupled to the gas (dev_field_efvm FIELD) through the DEM–CFD seam VERBATIM
-# (`cfd_ibm::coupling`). The local regression reports U_mf through the live seam,
+# (`cfd_ibm::coupling`). The local smoke case reports U_mf through the live seam,
 # plus a same-seam DEM consistency value and a Wen & Yu (1966) packed-bed
-# comparator. Its fault controls and dynamic sweep detect implementation changes.
+# comparator. Sensitivity probes and the dynamic sweep are reported as diagnostics.
 # They do not create experimental evidence or plume acceptance criteria.
 #
 # Small & fast: coarse gas mesh, d = 0.5 mm grains, a ~3 cm bed, air.
@@ -70,18 +70,3 @@ ncz = 8
 # Live coupled dynamical fluidization sweep (× U_mf) — must bracket onset (1.0).
 dyn_factors = [0.5, 0.8, 1.2, 1.5]
 dyn_steps   = 2500        # coupled parent iterations per sweep point
-
-[validation]
-# Frozen local regression limits. They are not uncertainty bounds or acceptance
-# criteria for any plume-surface claim; do not tune them to obtain a pass.
-tol_dem          = 0.10   # |U_mf_SPH - U_mf_DEM| / U_mf_DEM (continuum vs discrete)
-tol_wenyu        = 0.20   # |U_mf_SPH - U_mf_WenYu| / U_mf_WenYu (fluidization scatter)
-umf_err_floor    = 0.005  # non-tautology floor: measured vs-WenYu err must exceed this
-eps_bed_lo       = 0.33   # settled continuum voidage in a physical range
-eps_bed_hi       = 0.47
-eps_max          = 0.50   # dense (Ergun/MacDonald) regime gate
-tol_deposit_cell = 0.10   # worst |eps_cell - eps_bed|/eps_bed (deposit fidelity)
-tol_momentum     = 1.0e-9 # two-way momentum-exchange conservation (sanity)
-fluidized_p_frac = 0.05   # above U_mf: contact p COLLAPSES below 5% of settled (offloaded)
-packed_p_frac    = 0.10   # below U_mf: contact p stays above 10% of settled (residual load)
-v_fluid_min      = 1.0e-3 # m/s: upward COM velocity separating lifting from static

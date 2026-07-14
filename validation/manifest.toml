@@ -1,11 +1,11 @@
 [set]
-name = "dev_couple_sph_cfd-regression"
+name = "dev_couple_sph_cfd-smoke"
 tier = "dev_couple_sph_cfd"
-description = "Local packed-bed force-transfer regression. It is not a plume/crater validation gate; external held-out evidence is required before that claim can be evaluated."
+description = "Executable packed-bed force-transfer smoke case. It is not a plume/crater validation gate; external held-out evidence is required before that claim can be evaluated."
 
 [[validation]]
-id = "packed_bed_seam"
+id = "packed_bed_seam_smoke"
 mode = "smoke"
-kind = "example-sweep"
-command = "python3 examples/packed_bed_seam/sweep.py"
-reference = "A homogeneous, imposed-flow packed-bed regression: same-seam DEM is consistency only; Wen & Yu is a diagnostic packed-bed comparator. Fault controls test code sensitivity. The sweep regenerates examples/packed_bed_seam/plots/packed_bed_seam_validation.svg."
+kind = "example-smoke"
+command = "cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml"
+reference = "A homogeneous, imposed-flow executable smoke case. Same-seam DEM and Wen & Yu are diagnostics only; sensitivity probes exercise altered coupling paths. No local result is an acceptance criterion or scientific evidence."

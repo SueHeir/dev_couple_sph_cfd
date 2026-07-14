@@ -33,13 +33,13 @@ compose two independently-developed tiers. So each such coupling gets its own
 Reusable SPH-CFD coupling code lives in `crates/sph_cfd`: packed-bed closure and
 reference helpers, parcel deposition, force-balance measurement, SPH force import,
 CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
-Examples keep case geometry, frozen regression limits, comparison packings, and plots.
+Examples keep case geometry and diagnostic comparison packings.
 
 The `packed_bed_seam` example couples an **imposed homogeneous interstitial gas
 velocity** (stored in dev_field_efvm's FIELD state) to a granular bed
 (dev_soil_sph, as SOIL particles). It exercises the drag/pressure-gradient
-force hand-off and runs a limited packed-bed seam regression with a Wen--Yu
-diagnostic comparator and executable fault controls. It does not advance a CFD
+force hand-off and runs an executable packed-bed seam smoke case with a Wen--Yu
+diagnostic comparator and sensitivity probes. It does not advance a CFD
 solution or represent a nozzle, a plume, or a crater. The two sub-Apps run
 as **grass sub-Apps under one parent schedule** (`Tick → Couple`), sharing
 exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
@@ -82,10 +82,10 @@ mpirun --oversubscribe -np 5 target/debug/examples/routed_sph_cfd
 cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
 ```
 
-The runnable packed-bed regression is intentionally kept separate from the
-unmet impinging-plume acceptance claim. It is useful for detecting local
-force-hand-off regressions, but it is not an eligibility gate for a crater or
-erosion prediction.
+The runnable packed-bed smoke case is intentionally kept separate from the
+unmet impinging-plume acceptance claim. It demonstrates a configured local
+force hand-off, but it is not an eligibility gate for a crater or erosion
+prediction.
 
 ## License
 
