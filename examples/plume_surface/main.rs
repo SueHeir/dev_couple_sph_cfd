@@ -515,7 +515,6 @@ fn main() {
             "REGRESSION: PASS  (packed-bed force-transfer checks; not plume/crater validation; U_mf SPH {umf_sph:.4}; same-seam DEM {:.1}%<={:.0}%; WenYu comparator {:.1}%<={:.0}%; fault shifts {:+.0}%/{:+.0}%; eps_bed={eps_bed:.3})",
             100.0 * err_dem, 100.0 * valid.tol_dem,
             100.0 * err_wy, 100.0 * valid.tol_wenyu,
-            100.0 * valid.umf_err_floor,
             100.0 * (umf_nopg / umf_wy - 1.0), 100.0 * (umf_epsbug / umf_wy - 1.0),
         );
     } else {
