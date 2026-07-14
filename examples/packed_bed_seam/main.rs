@@ -56,7 +56,7 @@
 //! are retained to catch unintended code changes, not to establish physical validity.
 //!
 //! ```text
-//! cargo run --release --example plume_surface -- examples/plume_surface/config.toml
+//! cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
 //! ```
 //!
 //! References: S. Ergun, *Chem. Eng. Prog.* 48(2):89 (1952); C. Y. Wen & Y. H. Yu,
@@ -117,7 +117,7 @@ struct RunCfg {
 /// This example has a deliberately narrow forcing model.  Keeping that choice
 /// in the case file, and rejecting anything else, prevents a renamed or edited
 /// case from being mistaken for an advancing nozzle/plume calculation.
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct FlowCfg {
     model: String,
 }
@@ -126,7 +126,7 @@ fn require_imposed_uniform_flow(flow: &FlowCfg) {
     const SUPPORTED: &str = "imposed_uniform_interstitial_velocity";
     assert_eq!(
         flow.model, SUPPORTED,
-        "plume_surface is a packed-bed seam regression: it supports only \
+        "packed_bed_seam supports only \
          `{SUPPORTED}`, not a nozzle, plume, crater, or erosion model"
     );
 }
@@ -176,7 +176,7 @@ fn sph_config_toml(bed: &BedCfg, grav: &GravityCfg, dt: f64) -> String {
          spacing={sp}\nfrozen=true\n\
          [[sph.insert]]\nmaterial=\"grain\"\nregion_min=[{xlo},{ylo},{zlo}]\nregion_max=[{xhi},{yhi},{bzhi}]\n\
          spacing={sp}\nrest_density={rd}\n\
-         [output]\ndir=\"/tmp/plume_surface_dump\"\n\
+         [output]\ndir=\"/tmp/packed_bed_seam_dump\"\n\
          [[run]]\nname=\"settle\"\nsteps=100000000\ndt={dt}\n",
         xlo = bed.x_lo, xhi = bed.x_hi, ylo = bed.y_lo, yhi = bed.y_hi,
         zlo = bed.z_lo, zhi = dom_z_hi, fzlo = floor_lo, bzhi = bed.z_hi,
@@ -192,8 +192,8 @@ fn build_sph_app(bed: &BedCfg, grav: &GravityCfg, dt: f64) -> App {
     let mut app = App::new();
     app.add_resource(grass_io::Config::from_str(&toml));
     app.add_resource(grass_io::Input {
-        filename: String::from("plume_surface_sph"),
-        output_dir: Some(String::from("/tmp/plume_surface_dump")),
+        filename: String::from("packed_bed_seam_sph"),
+        output_dir: Some(String::from("/tmp/packed_bed_seam_dump")),
     });
     app.add_plugins(CorePlugins)
         .add_plugins(SphDefaultPlugins)
@@ -265,7 +265,7 @@ fn build_gas_mesh(bed: &BedCfg, grid: &GridCfg) -> UniformMeshConfig {
 fn main() {
     let path = std::env::args()
         .nth(1)
-        .expect("usage: plume_surface <case.toml>");
+        .expect("usage: packed_bed_seam <case.toml>");
     let toml_src =
         std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {path}: {e}"));
     let cfg = grass_io::Config::from_str(&toml_src);

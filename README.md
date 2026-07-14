@@ -35,7 +35,7 @@ reference helpers, parcel deposition, force-balance measurement, SPH force impor
 CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
 Examples keep case geometry, frozen regression limits, comparison packings, and plots.
 
-The `plume_surface` example couples an **imposed homogeneous interstitial gas
+The `packed_bed_seam` example couples an **imposed homogeneous interstitial gas
 velocity** (stored in dev_field_efvm's FIELD state) to a granular bed
 (dev_soil_sph, as SOIL particles). It exercises the drag/pressure-gradient
 force hand-off and runs a limited packed-bed seam regression with a Wen--Yu
@@ -52,7 +52,7 @@ same-observable comparator with an adversarial wrong-coupling control. A
 self-consistent flow profile or differently configured experiment is not a
 substitute. The concrete held-out protocol, including source provenance and an
 adversarial wrong-coupling control, is in
-[`examples/plume_surface/EXTERNAL_VALIDATION.md`](examples/plume_surface/EXTERNAL_VALIDATION.md).
+[`examples/packed_bed_seam/EXTERNAL_VALIDATION.md`](examples/packed_bed_seam/EXTERNAL_VALIDATION.md).
 No local manifest or claim guard is scientific evidence. This code and its
 documentation were authored with AI assistance and require domain-expert review
 before use in scientific conclusions.
@@ -79,7 +79,7 @@ mpirun --oversubscribe -np 5 target/debug/examples/routed_sph_cfd
 
 ```bash
 # all partner repos are sibling checkouts (grass, soil, field, dev_soil_sph, dev_field_efvm)
-cargo run --release --example plume_surface -- examples/plume_surface/config.toml
+cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
 ```
 
 The runnable packed-bed regression is intentionally kept separate from the

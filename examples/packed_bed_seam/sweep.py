@@ -14,7 +14,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 CONFIG = HERE / "config.toml"
 PLOTS = HERE / "plots"
-FIGURE = PLOTS / "plume_surface_validation.svg"
+FIGURE = PLOTS / "packed_bed_seam_validation.svg"
 
 
 def run_case() -> str:
@@ -23,7 +23,7 @@ def run_case() -> str:
         "run",
         "--release",
         "--example",
-        "plume_surface",
+        "packed_bed_seam",
         "--",
         str(CONFIG.relative_to(ROOT)),
     ]

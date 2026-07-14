@@ -1,6 +1,6 @@
 # External validation contract for an impinging-plume claim
 
-`plume_surface` does not meet this contract. Its imposed, homogeneous velocity
+`packed_bed_seam` does not meet this contract. Its imposed, homogeneous velocity
 field and packed-bed `U_mf` diagnostic are deliberately excluded from plume,
 crater, erosion, or ejecta acceptance.
 

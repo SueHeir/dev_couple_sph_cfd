@@ -4,8 +4,8 @@ tier = "dev_couple_sph_cfd"
 description = "Local packed-bed force-transfer regression. It is not a plume/crater validation gate; external held-out evidence is required before that claim can be evaluated."
 
 [[validation]]
-id = "plume_surface"
+id = "packed_bed_seam"
 mode = "smoke"
 kind = "example-sweep"
-command = "python3 examples/plume_surface/sweep.py"
-reference = "A homogeneous, imposed-flow packed-bed regression: same-seam DEM is consistency only; Wen & Yu is a diagnostic packed-bed comparator. Fault controls test code sensitivity. The sweep regenerates examples/plume_surface/plots/plume_surface_validation.svg."
+command = "python3 examples/packed_bed_seam/sweep.py"
+reference = "A homogeneous, imposed-flow packed-bed regression: same-seam DEM is consistency only; Wen & Yu is a diagnostic packed-bed comparator. Fault controls test code sensitivity. The sweep regenerates examples/packed_bed_seam/plots/packed_bed_seam_validation.svg."

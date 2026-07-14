@@ -16,8 +16,8 @@ default = []
 mpi-routing = ["sph_cfd/mpi-routing", "grass_multi/mpi", "field_core/mpi_backend"]
 
 [[example]]
-name = "plume_surface"
-path = "examples/plume_surface/main.rs"
+name = "packed_bed_seam"
+path = "examples/packed_bed_seam/main.rs"
 
 [[example]]
 name = "routed_sph_cfd"
