@@ -81,9 +81,10 @@ mpirun --oversubscribe -np 5 target/debug/examples/routed_sph_cfd
 cargo run --release --example plume_surface -- examples/plume_surface/config.toml
 ```
 
-Repo-level validation is declared in `validation/manifest.toml` and runs through
-`validation/run.sh`, which delegates to the plume-surface sweep so the numeric
-gate and committed figure come from the same measured output.
+The runnable packed-bed regression is intentionally kept separate from the
+unmet impinging-plume acceptance claim. It is useful for detecting local
+force-hand-off regressions, but it is not an eligibility gate for a crater or
+erosion prediction.
 
 ## License
 
