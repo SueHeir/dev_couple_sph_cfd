@@ -12,7 +12,6 @@ cd "$(dirname "$0")/.."
 
 PY="${BENCH_PYTHON:-python3}"
 
-echo "=== dev_couple_sph_cfd validation set ==="
-"$PY" examples/psi_evidence/test_fail_closed.py
+echo "=== dev_couple_sph_cfd packed-bed seam regression ==="
 "$PY" examples/plume_surface/sweep.py
-echo "=== all dev_couple_sph_cfd validation gates passed ==="
+echo "=== packed-bed seam regression passed ==="

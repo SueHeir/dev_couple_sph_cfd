@@ -51,9 +51,10 @@ material-, forcing-, and observation-time-matched experimental series, and a
 same-observable comparator with an adversarial wrong-coupling control. A
 self-consistent flow profile or differently configured experiment is not a
 substitute. The previous proposed jet-crater case is deliberately absent from
-this branch for that reason. The code and this clarification were prepared with
-AI assistance; they require domain-expert review before use in scientific
-conclusions.
+this branch for that reason. No manifest or local claim guard is presented as
+scientific evidence: this boundary is documentation, not a passing test. The
+code and this clarification were prepared with AI assistance; they require
+domain-expert review before use in scientific conclusions.
 
 The coupling system runs on the **parent** App. It obtains stable participant
 handles from `SubApps`, reads each solver's resources between child ticks, and
