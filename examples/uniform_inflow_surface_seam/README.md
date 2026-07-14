@@ -10,14 +10,14 @@ exchange-port seam.
 
 The Bagnold/Iversen–White and Roberts material is modelling context, not a quantitative PSI validation.  The independently retrieved Metzger et al. (2009) crater-depth experiment is documented in [the external-reference audit](data/metzger_2009_reference.md); its circular nitrogen nozzle, quartz grain range, stand-off, and 100-second observation interval do **not** match this planar, 3-mm, 0.016-second executable case.  The audit fails closed rather than allowing a cross-geometry comparison to masquerade as validation.  A severed-drag-port run is a coupling fault control, not external validation.
 
-![External PSI comparison ineligibility](plots/jet_crater_validation.png)
+![External PSI comparison ineligibility](plots/external_comparison_ineligible.png)
 
 The graph is an executable comparison-eligibility result. It visibly lists why
 the available external crater-depth trace cannot be used for this case. It is
 not measured-vs-reference PSI evidence and it does not emit a validation PASS.
 
 ```bash
-~/projects/automation/bin/run-bench.sh examples/jet_crater
+~/projects/automation/bin/run-bench.sh examples/uniform_inflow_surface_seam
 ```
 
 References: Bagnold (1941); Shields (1936); Iversen & White (1982); Roberts, IAS Paper 63-50 (1963); Schiller & Naumann (1935).
@@ -25,7 +25,7 @@ References: Bagnold (1941); Shields (1936); Iversen & White (1982); Roberts, IAS
 The reference provenance and the limits of this case are recorded in [data/references.md](data/references.md).
 
 ```bash
-python3 examples/jet_crater/external_reference_audit.py
+python3 examples/uniform_inflow_surface_seam/external_reference_audit.py
 ```
 
 This command intentionally exits nonzero and prints `EXTERNAL PSI COMPARISON:
@@ -33,9 +33,10 @@ INELIGIBLE`.  That result is evidence that the present case may not claim the
 published crater-depth trace as a pass.  It is not a benchmark failure to be
 weakened or bypassed.
 
-The benchmark wrapper likewise exits nonzero after writing the eligibility
-figure. This is deliberate: the automation records a zero exit as a validation
-PASS, and rendering an honest ineligibility report must never create one.
+The driver runs the boundary-driven CFD→SPH seam before it evaluates the
+reference firewall, then exits nonzero after writing the eligibility figure.
+This keeps an ineligible source from masking a broken executable path while
+ensuring that automation cannot record the run as a PSI-validation PASS.
 
 ## What an eligible comparison must contain
 

@@ -17,7 +17,7 @@ validation manifest.
 
 ## Boundary-driven CFD/SPH uniform-inflow seam probe (exploratory)
 
-[The uniform_inflow_surface_seam case](jet_crater/README.md) advances a spatially
+[The uniform_inflow_surface_seam case](uniform_inflow_surface_seam/README.md) advances a spatially
 uniform CFD top-boundary inflow and a port-coupled SPH surface response. It does
 not provide nozzle or impinging-jet physics. Its committed eligibility figure and
 external-reference audit deliberately report **INELIGIBLE**, not a PSI pass:

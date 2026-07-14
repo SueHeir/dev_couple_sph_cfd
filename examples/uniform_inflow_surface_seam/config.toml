@@ -65,20 +65,19 @@ g_list = [1.62, 3.71, 9.81]        # Moon, Mars, Earth surface gravity (m/s²)
 u_factors = [0.5, 1.8, 3.0]
 dyn_steps = 800
 
-[validation]
-# ── Part B: independent Bagnold threshold anchor + reduced-gravity trend ──
-# Recovered Bagnold coefficient A = u*/sqrt((ρ_s−ρ_f)/ρ_f · g · d) must land in the
-# published aerodynamic-threshold band around Bagnold (1941) A≈0.1 / Iversen–White
-# (1982). Built from the INDEPENDENT Schiller–Naumann C_d + the universal log-law,
-# NOT from A, so a genuine non-zero spread from 0.10 is expected (non-tautology).
+[diagnostics]
+# ── Exploratory Bagnold/reduced-gravity context — not a validation gate ──
+# These literature values annotate diagnostic output only. They are not a
+# tolerance, acceptance criterion, or substitute for a matched PSI observation.
 bagnold_a_ref = 0.10
 bagnold_a_lo  = 0.06
 bagnold_a_hi  = 0.20
 bagnold_a_err_floor = 0.05    # |A_meas−0.10|/0.10 must exceed this (independent closure)
-# Reduced-gravity exponent u_gc ∝ g^p: p must land in this band; a cohesive control gives ~0.
+# Reduced-gravity exponent context for u_gc ∝ g^p; a cohesive control is printed
+# as a contrast, not used as a scientific acceptance test.
 grav_exponent_lo = 0.40
 grav_exponent_hi = 0.72
 
-# ── Part C: live coupled response through the grass Port seam (exploratory) ──
+# ── Live coupled response through the grass Port seam (exploratory) ──
 # The result is reported only; it carries no PSI acceptance criterion.
 erode_min_hspeed = 0.01       # m/s — mean entrained-grain speed floor (they must actually move)

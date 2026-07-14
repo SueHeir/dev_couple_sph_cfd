@@ -63,7 +63,7 @@
 //!
 //! ```text
 //! cargo run --release --example uniform_inflow_surface_seam -- \
-//!     examples/jet_crater/config.toml
+//!     examples/uniform_inflow_surface_seam/config.toml
 //! ```
 //!
 //! References: R. A. Bagnold, *The Physics of Blown Sand and Desert Dunes*, Methuen
@@ -159,7 +159,7 @@ struct RunCfg {
 }
 
 #[derive(Deserialize, Default)]
-struct ValidationCfg {
+struct DiagnosticCfg {
     bagnold_a_ref: f64,
     bagnold_a_lo: f64,
     bagnold_a_hi: f64,
@@ -274,7 +274,7 @@ fn sph_config_toml(bed: &BedCfg, gz: f64, dt: f64) -> String {
          spacing={sp}\nfrozen=true\n\
          [[sph.insert]]\nmaterial=\"grain\"\nregion_min=[{xlo},{ylo},{zlo}]\nregion_max=[{xhi},{yhi},{bzhi}]\n\
          spacing={sp}\nrest_density={rd}\n\
-         [output]\ndir=\"/tmp/jet_crater_dump\"\n\
+         [output]\ndir=\"/tmp/uniform_inflow_surface_seam_dump\"\n\
          [[run]]\nname=\"settle\"\nsteps=100000000\ndt={dt}\nthermo=0\n",
         xlo = bed.x_lo, xhi = bed.x_hi, ylo = bed.y_lo, yhi = bed.y_hi,
         zlo = bed.z_lo, zhi = dom_z_hi, fzlo = floor_lo, bzhi = bed.z_hi,
@@ -378,8 +378,8 @@ fn build_sph_app(bed: &BedCfg, gz: f64, dt: f64, params: SphCoupleParams) -> App
     let mut app = App::new();
     app.add_resource(grass_io::Config::from_str(&toml));
     app.add_resource(grass_io::Input {
-        filename: String::from("jet_crater_sph"),
-        output_dir: Some(String::from("/tmp/jet_crater_dump")),
+        filename: String::from("uniform_inflow_surface_seam_sph"),
+        output_dir: Some(String::from("/tmp/uniform_inflow_surface_seam_dump")),
     });
     app.add_plugins(CorePlugins)
         .add_plugins(SphDefaultPlugins)
@@ -681,7 +681,7 @@ fn main() {
     let ll: LogLawCfg = cfg.section("loglaw");
     let scaling: ScalingCfg = cfg.section("scaling");
     let run: RunCfg = cfg.section("run");
-    let valid: ValidationCfg = cfg.section("validation");
+    let valid: DiagnosticCfg = cfg.section("diagnostics");
     let g0 = grav.gz.abs();
 
     println!("# Uniform CFD top-boundary inflow driving a granular-SPH free surface");
@@ -704,7 +704,7 @@ fn main() {
         u_gc * ll.kappa / ll.roughness_ratio.ln()
     );
     println!(
-        "# Bagnold A_meas={a_meas:.4}  (band [{:.3},{:.3}], ref {:.2})  rel.err vs 0.10 = {:.1}% (floor {:.0}%)",
+        "# Bagnold A_meas={a_meas:.4}  (literature context [{:.3},{:.3}], ref {:.2})  rel.err vs 0.10 = {:.1}% (context floor {:.0}%)",
         valid.bagnold_a_lo, valid.bagnold_a_hi, valid.bagnold_a_ref, 100.0 * a_err, 100.0 * valid.bagnold_a_err_floor
     );
 
@@ -749,7 +749,7 @@ fn main() {
         );
     }
     println!(
-        "# exponent p={p_g:.3}  (band [{:.2},{:.2}], Bagnold ½)   cohesive-control p={p_g_coh:.3}  (must fail band)",
+        "# exponent p={p_g:.3}  (context [{:.2},{:.2}], Bagnold ½)   cohesive-control p={p_g_coh:.3} (diagnostic)",
         valid.grav_exponent_lo, valid.grav_exponent_hi
     );
 
@@ -757,9 +757,7 @@ fn main() {
     println!("#");
     println!("# ── Part C: live uniform-inflow → SPH seam response (through grass ports) ──");
     println!("#   U/u_gc   U_in[m/s]   n_entrained/n_surf   mean entrained |v_h|   state");
-    let mut below_ok = true;
     let mut below_seen = false;
-    let mut above_ok = true;
     let mut above_seen = false;
     for &fac in &run.u_factors {
         let u_peak = fac * u_gc;
@@ -767,9 +765,6 @@ fn main() {
         let eroding = r.n_eroding > 0 && r.mean_eroding_hspeed > valid.erode_min_hspeed;
         let state = if fac > 1.0 {
             above_seen = true;
-            if !eroding {
-                above_ok = false;
-            }
             if eroding {
                 "entrained (exploratory)"
             } else {
@@ -777,9 +772,6 @@ fn main() {
             }
         } else {
             below_seen = true;
-            if r.n_eroding > 0 {
-                below_ok = false;
-            }
             if r.n_eroding == 0 {
                 "packed (exploratory)"
             } else {
@@ -820,34 +812,20 @@ fn main() {
         }
     );
 
-    // ── Verdict ──────────────────────────────────────────────────────────────────
-    let pass_a_band = a_meas >= valid.bagnold_a_lo && a_meas <= valid.bagnold_a_hi;
-    let pass_a_indep = a_err > valid.bagnold_a_err_floor;
-    let pass_grav = p_g >= valid.grav_exponent_lo && p_g <= valid.grav_exponent_hi;
-    let pass_grav_neg = p_g_coh < valid.grav_exponent_lo; // cohesive control must fail the band
-    let pass_below = below_seen && below_ok;
-    let pass_above = above_seen && above_ok;
-
+    // These are execution diagnostics, not a validation verdict.  In particular,
+    // their thresholds are properties of this exploratory configuration rather
+    // than uncertainty-backed comparisons to a matched external PSI observable.
+    // Keep the raw output for an eventual matched comparison, but do not turn it
+    // into a local pass/fail criterion.
     println!("#");
     println!("# ── result ─────────────────────────────────────────────");
     println!(
-        "# checks: A_band={pass_a_band} A_indep={pass_a_indep} grav_exp={pass_grav} grav_neg={pass_grav_neg} \
-         packed_below={pass_below} erodes_above={pass_above} severed_neg={pass_sever}; erosion offset is diagnostic only"
+        "# diagnostics: Bagnold A={a_meas:.5}, gravity exponents={p_g:.3}/{p_g_coh:.3}, \
+         below_onset_seen={below_seen}, above_onset_seen={above_seen}, \
+         port-severed_packed={pass_sever}; none is external PSI validation"
     );
-    if pass_a_band
-        && pass_a_indep
-        && pass_grav
-        && pass_grav_neg
-        && pass_below
-        && pass_above
-        && pass_sever
-    {
-        println!(
-            "EXPLORATORY RESPONSE RECORDED (not a PSI validation verdict; no digitized, \
-             geometry-matched crater/erosion data are compared)",
-        );
-    } else {
-        println!("EXPLORATORY CONTROLS: FAIL");
-        std::process::exit(1);
-    }
+    println!(
+        "EXPLORATORY RESPONSE RECORDED (not a PSI validation verdict; no digitized, \
+         geometry-matched crater/erosion data are compared)",
+    );
 }

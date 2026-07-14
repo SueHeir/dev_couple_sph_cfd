@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-OUT = HERE / "plots" / "jet_crater_validation.png"
+OUT = HERE / "plots" / "external_comparison_ineligible.png"
 
 
 def external_comparison_is_eligible() -> tuple[bool, str]:
@@ -75,29 +75,16 @@ def grab(pattern: str, text: str) -> re.Match[str]:
 
 
 def main() -> None:
-    eligible, audit = external_comparison_is_eligible()
-    if not eligible:
-        render_ineligible(audit)
-        print(f"Wrote {OUT.relative_to(ROOT)} (external PSI comparison ineligible)")
-        # `run-bench.sh` treats a zero driver exit as PASS.  Returning zero here
-        # would turn an intentionally ineligible external comparison into a green
-        # validation record merely because the explanatory artwork rendered.
-        # Preserve the artifact for review, but fail the benchmark until there is
-        # a geometry-matched source table and a same-observable comparator.
-        raise SystemExit("VALIDATION: FAIL — external PSI comparison is ineligible")
-
-    # Do not silently turn an eligible audit into a pass: an eligible case still
-    # has to run the simulation and compare the same observable to source data.
-    raise RuntimeError("eligible reference has no implemented quantitative comparator")
-
+    # Always exercise the boundary-driven CFD→SPH path.  The reference audit below
+    # decides only whether this execution may be compared to a PSI observation;
+    # it must not become a shortcut that hides a broken runnable case.
     proc = subprocess.run(
-        ["cargo", "run", "--release", "--example", "uniform_inflow_surface_seam", "--", "examples/jet_crater/config.toml"],
+        ["cargo", "run", "--release", "--example", "uniform_inflow_surface_seam", "--", "examples/uniform_inflow_surface_seam/config.toml"],
         cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False,
     )
     print(proc.stdout)
     if proc.returncode:
         raise SystemExit(proc.returncode)
-    verdict = grab(r"EXPLORATORY CONTROLS: (PASS|FAIL)", proc.stdout).group(1)
     a = grab(r"Bagnold A_meas=([0-9.]+).*band \[([0-9.]+),([0-9.]+)\]", proc.stdout)
     exponent = grab(r"exponent p=([0-9.]+).*cohesive-control p=([0-9.]+)", proc.stdout)
     rows = re.findall(r"^\s*([0-9.]+)\s+([0-9.]+)\s+(\d+)/(\d+).*?\s+([0-9.]+)\s+(?:packed|ERODES)", proc.stdout, re.MULTILINE)
@@ -123,10 +110,21 @@ def main() -> None:
     ax.axvline(1, color="#7c3aed", ls="--", label="onset")
     ax.set(xlabel="uniform-inflow strength U/u_gc", ylabel="parcel count", title="Live CFD→SPH exploratory response")
     ax.legend(fontsize=8)
-    fig.suptitle(f"Uniform-inflow seam controls: {verdict} — not external PSI validation", fontweight="bold")
-    OUT.parent.mkdir(exist_ok=True)
-    fig.savefig(OUT, dpi=160)
-    print(f"Wrote {OUT.relative_to(ROOT)}")
+    fig.suptitle("Uniform-inflow seam diagnostics — not external PSI validation", fontweight="bold")
+
+    eligible, audit = external_comparison_is_eligible()
+    if not eligible:
+        # Do not overwrite the committed eligibility figure with local diagnostic
+        # curves: a reader must see why these curves cannot be called a PSI match.
+        plt.close(fig)
+        render_ineligible(audit)
+        print(f"Wrote {OUT.relative_to(ROOT)} (external PSI comparison ineligible)")
+        raise SystemExit("VALIDATION: FAIL — CFD/SPH seam executed, but external PSI comparison is ineligible")
+
+    # An eligible source still needs a comparator with source uncertainty and a
+    # wrong-coupling run.  Never convert eligibility alone into success.
+    plt.close(fig)
+    raise RuntimeError("eligible reference has no implemented quantitative comparator")
 
 
 if __name__ == "__main__":

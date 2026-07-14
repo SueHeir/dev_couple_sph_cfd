@@ -18,7 +18,7 @@ experiments.
 
 ## Why this is not an eligible reference for the current executable case
 
-`jet_crater/config.toml` describes an air-like, planar thin-slab calculation,
+`uniform_inflow_surface_seam/config.toml` describes an air-like, planar thin-slab calculation,
 with 3 mm grains and 0.016 s of coupled evolution.  It has neither the
 circular nozzle nor the source material/diameter/stand-off/time regime.  A
 numerical comparison to the Fig. 3 depth trace would therefore be a

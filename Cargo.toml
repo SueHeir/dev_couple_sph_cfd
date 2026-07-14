@@ -24,7 +24,7 @@ path = "examples/packed_bed_seam/main.rs"
 
 [[example]]
 name = "uniform_inflow_surface_seam"
-path = "examples/jet_crater/main.rs"
+path = "examples/uniform_inflow_surface_seam/main.rs"
 
 [[example]]
 name = "routed_sph_cfd"
