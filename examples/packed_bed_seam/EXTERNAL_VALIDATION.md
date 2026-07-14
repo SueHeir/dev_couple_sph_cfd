@@ -30,6 +30,12 @@ It is relevant external context, but its public record/abstract is not a
 machine-readable, case-matched acceptance series in this repository. Neither
 source can be used to mark a simulation pass.
 
+Their identity can be independently rechecked with
+`python3 validation/audit_external_references.py`. This networked audit verifies
+only that the public records still identify themselves as expected. It neither
+downloads a held-out observation series nor evaluates a model error, so a
+successful audit is explicitly not plume-surface predictive evidence.
+
 ## Pre-registered comparison
 
 Before inspecting the held-out observations, freeze the mesh/time-step study,

@@ -57,6 +57,11 @@ No local manifest or claim guard is scientific evidence. This code and its
 documentation were authored with AI assistance and require domain-expert review
 before use in scientific conclusions.
 
+Run `python3 validation/audit_external_references.py` to independently recheck
+the identity of the public PSI context records named by that protocol. It is a
+fail-closed provenance check only—not data validation, numerical comparison, or
+an acceptance gate.
+
 The coupling system runs on the **parent** App. It obtains stable participant
 handles from `SubApps`, reads each solver's resources between child ticks, and
 returns the force through the public seam resources in

@@ -9,6 +9,11 @@ held-out protocol in
 [`packed_bed_seam/EXTERNAL_VALIDATION.md`](packed_bed_seam/EXTERNAL_VALIDATION.md).
 Until then, the result below is only a packed-bed seam smoke execution.
 
+The named external PSI context records have a separate networked provenance
+audit (`python3 validation/audit_external_references.py`). It fails closed if a
+public record changes or cannot be retrieved, but it is not a physical
+acceptance criterion and is intentionally outside the smoke harness.
+
 ## Coupled SPH-CFD packed-bed seam smoke case
 
 [The packed_bed_seam smoke case](packed_bed_seam/README.md) runs the live SPH-CFD
