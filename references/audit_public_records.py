@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Verify identity of the public PSI context sources named by this repository.
+"""Maintain identities of the public PSI context sources named by this repository.
 
-This is source-provenance checking, not model validation.  It deliberately does
-not download observations, calculate an error, or produce a scientific verdict.
-The cited pages are context only, not a case-matched held-out dataset.
+This is citation maintenance, not model validation. It deliberately does not
+download observations, calculate an error, or produce a scientific verdict. The
+cited pages are context only, not a case-matched held-out dataset. It must not
+be added to the executable validation manifest.
 """
 
 from __future__ import annotations
@@ -63,10 +64,10 @@ def main() -> int:
         else:
             print(f"verified public-record identity: {record.name}")
     if failures:
-        print("external-reference provenance audit FAILED; re-review before relying on these records:")
+        print("external-reference citation audit FAILED; re-review before relying on these records:")
         print("\n".join(f"- {failure}" for failure in failures))
         return 1
-    print("provenance audit completed; this is not scientific validation or plume acceptance.")
+    print("citation audit completed; this is not scientific validation or plume acceptance.")
     return 0
 
 

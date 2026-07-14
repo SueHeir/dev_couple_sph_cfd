@@ -31,10 +31,11 @@ machine-readable, case-matched acceptance series in this repository. Neither
 source can be used to mark a simulation pass.
 
 Their identity can be independently rechecked with
-`python3 validation/audit_external_references.py`. This networked audit verifies
-only that the public records still identify themselves as expected. It neither
-downloads a held-out observation series nor evaluates a model error, so a
-successful audit is explicitly not plume-surface predictive evidence.
+`python3 references/audit_public_records.py`. This networked audit verifies only
+that the public records still identify themselves as expected. It is a citation-
+maintenance tool, not a validation-manifest entry: it neither downloads a
+held-out observation series nor evaluates a model error, so a successful audit
+is explicitly not plume-surface predictive evidence.
 
 ## Pre-registered comparison
 
