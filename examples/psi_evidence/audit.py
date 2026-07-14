@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Refuse a PSI-validation claim until independent comparison inputs exist.
+"""Fail closed for the pending PSI validation claim.
 
-This is deliberately an eligibility audit, not a numerical validation. It has
-no default data and cannot emit PASS for the plume/crater goal.
+This script deliberately cannot certify a crater/erosion/ejecta validation.
+File names, hashes, and self-declared manifest fields establish neither the
+provenance of external data nor that an advancing CFD case matches it. Those
+facts require a reviewed, independently runnable comparator. Consequently this
+gate always exits nonzero; it guards against an unsupported claim, not a
+numerical acceptance test.
 """
 from __future__ import annotations
 
@@ -74,7 +78,11 @@ def main() -> None:
     has_rows(wrong, "wrong-coupling control")
     if not comparator.is_file():
         blocked("independent comparator script is absent")
-    print("PSI EVIDENCE: ELIGIBLE FOR EXTERNAL COMPARISON (not a validation PASS)")
+    blocked(
+        "a manifest-shaped package is not independently verified external PSI evidence; "
+        "do not claim validation until a reviewed comparator establishes matched inputs, "
+        "uncertainty, and a failing wrong-coupling control"
+    )
 
 
 if __name__ == "__main__":

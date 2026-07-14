@@ -35,21 +35,25 @@ reference helpers, parcel deposition, force-balance measurement, SPH force impor
 CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
 Examples keep case geometry, validation tolerances, comparison packings, and plots.
 
-The `plume_surface` example couples a gas flow (dev_field_efvm, on a FIELD mesh)
-to a granular bed (dev_soil_sph, as SOIL particles): the gas exerts drag on the
-grains and the grains displace/block the gas.  It validates the
-minimum-fluidization seam against the Wen--Yu correlation and a discrete
-same-seam comparison, including executable fault controls. The two solvers run
+The `plume_surface` example couples an **imposed homogeneous interstitial gas
+velocity** (stored in dev_field_efvm's FIELD state) to a granular bed
+(dev_soil_sph, as SOIL particles). It exercises the drag/pressure-gradient
+force hand-off and validates that limited packed-bed seam regression against the
+Wen--Yu correlation, with executable fault controls. It does not advance a CFD
+solution or represent a nozzle, a plume, or a crater. The two sub-Apps run
 as **grass sub-Apps under one parent schedule** (`Tick → Couple`), sharing
 exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
 
-This repository does not currently provide a validated impinging-jet crater,
-erosion, or ejecta prediction. Such a claim requires a geometry-, material-,
-forcing-, and observation-time-matched experimental series; a self-consistent
-flow profile or a differently configured experiment is not a substitute. The
-previous proposed jet-crater case is deliberately absent from this branch for
-that reason. The code and this clarification were prepared with AI assistance;
-they require domain-expert review before use in scientific conclusions.
+This repository does not currently provide an advancing-CFD impinging-jet case,
+nor a validated crater, erosion, or ejecta prediction. Such a claim requires an
+advancing CFD solver with specified inlet/outlet conditions, a geometry-,
+material-, forcing-, and observation-time-matched experimental series, and a
+same-observable comparator with an adversarial wrong-coupling control. A
+self-consistent flow profile or differently configured experiment is not a
+substitute. The previous proposed jet-crater case is deliberately absent from
+this branch for that reason. The code and this clarification were prepared with
+AI assistance; they require domain-expert review before use in scientific
+conclusions.
 
 The coupling system runs on the **parent** App. It obtains stable participant
 handles from `SubApps`, reads each solver's resources between child ticks, and
