@@ -1,11 +1,10 @@
 # Independent reference provenance
 
-- R. A. Bagnold, *The Physics of Blown Sand and Desert Dunes* (1941), aerodynamic entrainment scaling `u* = A sqrt(((rho_s-rho_f)/rho_f) g d)`, with `A` of order 0.1.
-- J. D. Iversen and B. R. White, “Saltation threshold on Earth, Mars and Venus,” *Sedimentology* 29, 111–119 (1982), experimental/aerodynamic threshold context used for the deliberately broad `A=[0.06,0.20]` acceptance band.
-- L. Roberts, “The action of a hypersonic jet on a dust layer,” IAS Paper 63-50 (1963), wall-jet plume/surface erosion and off-axis shear mechanism.
-- L. Schiller and A. Naumann, *Z. Ver. Deut. Ing.* 77, 318 (1935), independent sphere-drag closure used to recover onset; it does not contain the Bagnold coefficient.
+- L. Schiller and A. Naumann, *Z. Ver. Deut. Ing.* 77, 318 (1935), sphere-drag closure used for the local coupling force.
 
-These references motivate closures and qualitative mechanisms only. This case does not include a digitized Roberts crater/erosion series at matched nozzle, stand-off, gas, grain, and gravity conditions, so neither the Bagnold band nor off-axis response is an external PSI validation gate. The cohesive and severed-port runs are implementation controls, not substitutes for independent data.
+This reference supplies a local drag closure only. It is not a plume-surface
+experiment and is not used as an external PSI target. The severed-port run is a
+seam observation, not a substitute for independent data.
 
 Metzger et al. (2009), doi:10.1063/1.3180041 (open preprint arXiv:0905.4851),
 is now retained as an independently checked crater-depth source.  Its case is

@@ -29,36 +29,21 @@
 //! grass-solver-coupling-ergonomics (grass PR #11), exercised across two different
 //! paradigms (Eulerian mesh gas ↔ Lagrangian granular continuum).
 //!
-//! ## Modelling context and controls (not external PSI validation)
+//! ## Exploratory seam probe
 //!
-//! A surface grain is entrained when the aerodynamic drag overcomes the resisting
-//! moment of its **submerged weight** — the Bagnold (1941) / Shields (1936)
-//! incipient-motion criterion. Non-dimensionalised, the onset friction velocity is
-//! `u*_t = A · sqrt((ρ_s−ρ_f)/ρ_f · g · d)` with the aerodynamic coefficient
-//! `A ≈ 0.1` (Bagnold 1941; Iversen & White 1982). The following diagnostic checks
-//! are assembled from Schiller–Naumann drag, bed friction, and a rough-wall log-law.
-//! They do not supply a geometry-matched crater/erosion datum and therefore are not
-//! acceptance evidence for the PSI goal:
-//!   1. **Bagnold-A anchor.** The recovered `A_meas` (from the coupled seam's own
-//!      onset slip, converted to `u*` by the textbook log-law) must land in the
-//!      published context band around `A≈0.1`.
-//!   2. **Reduced-gravity trend.** The onset slip must scale `u_gc ∝ g^{~1/2}` over
-//!      Moon→Mars→Earth gravity (the PSI reduced-gravity behaviour). A **cohesive
-//!      negative control** — resistance made *g-independent* — gives exponent ≈ 0
-//!      and FAILS the band, proving the gate is not vacuous.
-//!
-//! ## The live coupled seam probe (Part C)
-//!
-//! The CFD inlet is stepped against a settled SPH bed through the ports over a sweep
-//! of uniform inlet strengths. A severed-drag-port run is a coupling-fault control.
-//! Neither response is called crater growth or PSI validation.
+//! The CFD inlet is stepped against a settled SPH bed through the ports over a
+//! sweep of uniform inlet strengths.  The velocity scale is a local
+//! drag-versus-submerged-weight calculation using the configured material
+//! properties; it is used only to select informative probe inputs, not as a
+//! literature comparison or a pass/fail threshold. A severed-drag-port run is a
+//! coupling-fault observation. Neither response is called crater growth or PSI
+//! validation.
 //!
 //! ## Honest labelling
 //!
-//! The surface entrainment law (drag vs submerged weight) is the standard
-//! Shields/Roberts closure, so "mobilises above / packed below onset" in Part C is a
-//! **consistency** statement with Part B's onset. The reduced-gravity and
-//! severed-port controls can falsify the implementation. None is a substitute for an external,
+//! The surface force uses a drag-versus-submerged-weight closure. Its output is
+//! retained as an executable seam observation only. The severed-port run can
+//! expose a broken hand-off, but it is not a substitute for an external,
 //! quantitative PSI comparison.
 //!
 //! ```text
@@ -66,11 +51,8 @@
 //!     examples/uniform_inflow_surface_seam/config.toml
 //! ```
 //!
-//! References: R. A. Bagnold, *The Physics of Blown Sand and Desert Dunes*, Methuen
-//! (1941); A. Shields, *Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau* 26 (1936);
-//! J. D. Iversen & B. R. White, *Sedimentology* 29:111 (1982); L. Roberts, "The
-//! action of a hypersonic jet on a dust layer," IAS Paper 63-50 (1963);
-//! L. Schiller & A. Naumann, *Z. Ver. Deut. Ing.* 77:318 (1935).
+//! Reference for the drag closure: L. Schiller & A. Naumann, *Z. Ver. Deut. Ing.*
+//! 77:318 (1935).  No PSI reference is used as a numerical target here.
 
 use std::any::TypeId;
 use std::f64::consts::PI;
@@ -142,55 +124,33 @@ struct GravityCfg {
 }
 
 #[derive(Deserialize, Default)]
-struct LogLawCfg {
-    kappa: f64,
-    roughness_ratio: f64,
-}
-
-#[derive(Deserialize, Default)]
-struct ScalingCfg {
-    g_list: Vec<f64>,
-}
-
-#[derive(Deserialize, Default)]
 struct RunCfg {
     u_factors: Vec<f64>,
     dyn_steps: usize,
 }
 
-#[derive(Deserialize, Default)]
-struct DiagnosticCfg {
-    bagnold_a_ref: f64,
-    bagnold_a_lo: f64,
-    bagnold_a_hi: f64,
-    bagnold_a_err_floor: f64,
-    grav_exponent_lo: f64,
-    grav_exponent_hi: f64,
-    erode_min_hspeed: f64,
-}
-
-// ─── Independent surface-grain entrainment force balance (Bagnold/Shields) ─────
+// ─── Surface-grain drag-to-weight input scale ─────────────────────────────────
 // The resisting force is the incipient-motion criterion: the aerodynamic drag on an
 // exposed grain must overcome tan(φ)·(submerged weight), with tan(φ)=μ_s the bed's
 // own repose friction (a material property, not a fitted constant). The DRAG is the
 // INDEPENDENT Schiller–Naumann C_d(Re) sphere drag reused verbatim from cfd_ibm.
 
-/// Onset near-surface gas slip `u_gc` at which an exposed surface grain is entrained.
-/// `cohesive` replaces the submerged-weight resistance with a fixed (g-independent)
-/// value — the reduced-gravity negative control.
-fn entrainment_onset_u(
+/// Estimate the slip at which configured drag equals the configured grain's
+/// drag-to-weight resistance. This selects a probe scale; it is not validated
+/// onset physics and is never an acceptance criterion.
+fn drag_to_weight_speed(
     d: f64,
     rho_s: f64,
     rho_f: f64,
     mu: f64,
     g: f64,
     mu_s: f64,
-    cohesive_resist: Option<f64>,
+    resistance: f64,
 ) -> f64 {
     let r = 0.5 * d;
     let v = 4.0 / 3.0 * PI * r.powi(3);
     // Resisting force (horizontal drag needed to dislodge the grain).
-    let resist = cohesive_resist.unwrap_or(mu_s * (rho_s - rho_f) * g * v);
+    let resist = resistance * mu_s * (rho_s - rho_f) * g * v;
     // Horizontal drag magnitude on a resting grain in slip `u` (monotone in u).
     let drag_mag = |u: f64| {
         let f = sphere_drag_force([u, 0.0, 0.0], [0.0; 3], r, rho_f, mu, cd_schiller_naumann);
@@ -207,29 +167,6 @@ fn entrainment_onset_u(
         }
     }
     0.5 * (lo + hi)
-}
-
-/// Bagnold coefficient `A = u*/sqrt((ρ_s−ρ_f)/ρ_f · g · d)` recovered from the onset
-/// slip `u_gc` via the textbook rough-wall log-law `u* = u_gc·κ/ln(z_ref/z0)`,
-/// `z_ref=d`, `z0=d/roughness_ratio`. κ and z0/d are universal, not fitted.
-fn bagnold_a(u_gc: f64, d: f64, rho_s: f64, rho_f: f64, g: f64, ll: &LogLawCfg) -> f64 {
-    let u_star = u_gc * ll.kappa / ll.roughness_ratio.ln();
-    u_star / (((rho_s - rho_f) / rho_f) * g * d).sqrt()
-}
-
-/// Least-squares slope of `ln(y)` vs `ln(x)` — the power-law exponent.
-fn loglog_slope(xs: &[f64], ys: &[f64]) -> f64 {
-    let n = xs.len() as f64;
-    let lx: Vec<f64> = xs.iter().map(|v| v.ln()).collect();
-    let ly: Vec<f64> = ys.iter().map(|v| v.ln()).collect();
-    let mx = lx.iter().sum::<f64>() / n;
-    let my = ly.iter().sum::<f64>() / n;
-    let (mut num, mut den) = (0.0, 0.0);
-    for i in 0..xs.len() {
-        num += (lx[i] - mx) * (ly[i] - my);
-        den += (lx[i] - mx) * (lx[i] - mx);
-    }
-    num / den
 }
 
 // ─── The grass coupling contract: the two port message types ──────────────────
@@ -317,7 +254,7 @@ struct SphErosionDiag {
 
 /// SPH `Force` phase: (1) refresh the surface-parcel list for export, and (2) apply
 /// the consumed gas drag to surface parcels **iff** it overcomes the grain's
-/// entrainment resistance (Shields/Roberts surface law) — eroding the free surface.
+/// entrainment resistance — moving the free surface.
 fn sph_surface_and_erode(
     mut atoms: ResMut<Atom>,
     registry: Res<AtomDataRegistry>,
@@ -349,8 +286,8 @@ fn sph_surface_and_erode(
         let v_solid = sph.particle_mass[i] / params.rho_s;
         let radius = (3.0 * v_solid / (4.0 * PI)).cbrt();
         let resist = params.mu_s * (params.rho_s - params.rho_f) * params.g * v_solid;
-        // Apply the consumed gas drag with the entrainment gate (Shields/Roberts
-        // surface law): a grain erodes only when the drag beats its resistance.
+        // Apply the consumed gas drag with the configured surface resistance:
+        // a parcel moves only when the drag beats that resistance.
         if !params.sever {
             if let Some(f) = drag.force.get(i) {
                 let fmag = (f[0] * f[0] + f[1] * f[1] + f[2] * f[2]).sqrt();
@@ -678,108 +615,28 @@ fn main() {
     let bed: BedCfg = cfg.section("bed");
     let grid: GridCfg = cfg.section("grid");
     let grav: GravityCfg = cfg.section("gravity");
-    let ll: LogLawCfg = cfg.section("loglaw");
-    let scaling: ScalingCfg = cfg.section("scaling");
     let run: RunCfg = cfg.section("run");
-    let valid: DiagnosticCfg = cfg.section("diagnostics");
     let g0 = grav.gz.abs();
 
     println!("# Uniform CFD top-boundary inflow driving a granular-SPH free surface");
     println!("# COUPLING: grass exchange ports (grass_multi::Port / expose_field / consume_field)");
-    println!("# CONTEXT: Bagnold (1941) threshold diagnostic; not a jet or PSI model");
+    println!("# exploratory seam probe; not a jet or PSI model");
     println!(
         "# gas: rho_f={} mu={:.3e}   grain d={:.3e} m   rho_s={}   mu_s(tanφ)={}",
         gas.rho, gas.mu, bed.grain_d, bed.rho_s, bed.mu_s
     );
 
-    // ── Part B1: independent Bagnold-A anchor at baseline ────────────────────────
-    let u_gc = entrainment_onset_u(bed.grain_d, bed.rho_s, gas.rho, gas.mu, g0, bed.mu_s, None);
-    let re_c = gas.rho * u_gc * bed.grain_d / gas.mu;
-    let a_meas = bagnold_a(u_gc, bed.grain_d, bed.rho_s, gas.rho, g0, &ll);
-    let a_err = (a_meas - valid.bagnold_a_ref).abs() / valid.bagnold_a_ref;
-    println!("#");
-    println!("# ── Part B: Bagnold/Shields mechanism diagnostics (not PSI validation) ──");
-    println!(
-        "# onset slip u_gc={u_gc:.4} m/s   Re_c={re_c:.0}   u*={:.4} m/s",
-        u_gc * ll.kappa / ll.roughness_ratio.ln()
-    );
-    println!(
-        "# Bagnold A_meas={a_meas:.4}  (literature context [{:.3},{:.3}], ref {:.2})  rel.err vs 0.10 = {:.1}% (context floor {:.0}%)",
-        valid.bagnold_a_lo, valid.bagnold_a_hi, valid.bagnold_a_ref, 100.0 * a_err, 100.0 * valid.bagnold_a_err_floor
-    );
+    let u_scale = drag_to_weight_speed(bed.grain_d, bed.rho_s, gas.rho, gas.mu, g0, bed.mu_s, 1.0);
 
-    // ── Part B2: reduced-gravity trend u_gc ∝ g^p + cohesive negative control ─────
-    let mut gs = Vec::new();
-    let mut us = Vec::new();
-    let mut us_coh = Vec::new();
-    // Cohesive control: freeze the resistance at its g0 value (g-independent).
-    let coh = {
-        let r = 0.5 * bed.grain_d;
-        let v = 4.0 / 3.0 * PI * r.powi(3);
-        bed.mu_s * (bed.rho_s - gas.rho) * g0 * v
-    };
-    for &gg in &scaling.g_list {
-        gs.push(gg);
-        us.push(entrainment_onset_u(
-            bed.grain_d,
-            bed.rho_s,
-            gas.rho,
-            gas.mu,
-            gg,
-            bed.mu_s,
-            None,
-        ));
-        us_coh.push(entrainment_onset_u(
-            bed.grain_d,
-            bed.rho_s,
-            gas.rho,
-            gas.mu,
-            gg,
-            bed.mu_s,
-            Some(coh),
-        ));
-    }
-    let p_g = loglog_slope(&gs, &us);
-    let p_g_coh = loglog_slope(&gs, &us_coh);
-    println!("# reduced-gravity trend u_gc ∝ g^p:");
-    for i in 0..gs.len() {
-        println!(
-            "#   g={:>5.2}  u_gc={:.4}   (cohesive control u_gc={:.4})",
-            gs[i], us[i], us_coh[i]
-        );
-    }
-    println!(
-        "# exponent p={p_g:.3}  (context [{:.2},{:.2}], Bagnold ½)   cohesive-control p={p_g_coh:.3} (diagnostic)",
-        valid.grav_exponent_lo, valid.grav_exponent_hi
-    );
-
-    // ── Part C: live coupled response through the grass ports ────────────────────
+    // ── Live coupled response through the grass ports ────────────────────────────
     println!("#");
-    println!("# ── Part C: live uniform-inflow → SPH seam response (through grass ports) ──");
-    println!("#   U/u_gc   U_in[m/s]   n_entrained/n_surf   mean entrained |v_h|   state");
-    let mut below_seen = false;
-    let mut above_seen = false;
+    println!("# ── live uniform-inflow → SPH seam response (through grass ports) ──");
+    println!("#   U/U_scale   U_in[m/s]   n_entrained/n_surf   mean entrained |v_h|   observation");
     for &fac in &run.u_factors {
-        let u_peak = fac * u_gc;
+        let u_peak = fac * u_scale;
         let r = run_coupled(&gas, &bed, &grid, g0, grav.gz, u_peak, run.dyn_steps, false);
-        let eroding = r.n_eroding > 0 && r.mean_eroding_hspeed > valid.erode_min_hspeed;
-        let state = if fac > 1.0 {
-            above_seen = true;
-            if eroding {
-                "entrained (exploratory)"
-            } else {
-                "not entrained (exploratory)"
-            }
-        } else {
-            below_seen = true;
-            if r.n_eroding == 0 {
-                "packed (exploratory)"
-            } else {
-                "entrained below onset (exploratory)"
-            }
-        };
         println!(
-            "  {fac:>6.2}   {u_peak:>8.4}   {:>6}/{:<6}   {:>20.4e}   {state}",
+            "  {fac:>8.2}   {u_peak:>8.4}   {:>6}/{:<6}   {:>20.4e}   recorded",
             r.n_eroding, r.n_surface, r.mean_eroding_hspeed
         );
     }
@@ -797,32 +654,22 @@ fn main() {
         &grid,
         g0,
         grav.gz,
-        strongest * u_gc,
+        strongest * u_scale,
         run.dyn_steps,
         true,
     );
-    let pass_sever = sev.n_eroding == 0;
     println!(
-        "# severed-port control (U/u_gc={strongest:.2}): n_erode={} -> {}",
+        "# severed-port observation (U/U_scale={strongest:.2}): n_entrained={} (not a pass/fail control)",
         sev.n_eroding,
-        if pass_sever {
-            "packed (exploratory fault control)"
-        } else {
-            "entrained with severed port — investigate"
-        }
     );
 
-    // These are execution diagnostics, not a validation verdict.  In particular,
-    // their thresholds are properties of this exploratory configuration rather
-    // than uncertainty-backed comparisons to a matched external PSI observable.
-    // Keep the raw output for an eventual matched comparison, but do not turn it
-    // into a local pass/fail criterion.
+    // This execution output is not a validation verdict.  It carries no comparison
+    // tolerance and no self-authored criterion that could authorize PSI acceptance.
     println!("#");
     println!("# ── result ─────────────────────────────────────────────");
     println!(
-        "# diagnostics: Bagnold A={a_meas:.5}, gravity exponents={p_g:.3}/{p_g_coh:.3}, \
-         below_onset_seen={below_seen}, above_onset_seen={above_seen}, \
-         port-severed_packed={pass_sever}; none is external PSI validation"
+        "# local input scale={u_scale:.5} m/s; nominal and severed-port observations \
+         recorded; neither is external PSI validation"
     );
     println!(
         "EXPLORATORY RESPONSE RECORDED (not a PSI validation verdict; no digitized, \

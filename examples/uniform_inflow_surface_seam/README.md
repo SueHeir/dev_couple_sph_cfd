@@ -8,7 +8,7 @@ nozzle, an impinging jet, a wall jet, or a crater. The evolving CFD state is
 sampled at SPH surface parcels and returns Schiller–Naumann drag through the GRASS
 exchange-port seam.
 
-The Bagnold/Iversen–White and Roberts material is modelling context, not a quantitative PSI validation.  The independently retrieved Metzger et al. (2009) crater-depth experiment is documented in [the external-reference audit](data/metzger_2009_reference.md); its circular nitrogen nozzle, quartz grain range, stand-off, and 100-second observation interval do **not** match this planar, 3-mm, 0.016-second executable case.  The audit fails closed rather than allowing a cross-geometry comparison to masquerade as validation.  A severed-drag-port run is a coupling fault control, not external validation.
+The independently retrieved Metzger et al. (2009) crater-depth experiment is documented in [the external-reference audit](data/metzger_2009_reference.md); its circular nitrogen nozzle, quartz grain range, stand-off, and 100-second observation interval do **not** match this planar, 3-mm, 0.016-second executable case.  The audit fails closed rather than allowing a cross-geometry comparison to masquerade as validation.  A severed-drag-port run is a seam observation, not external validation.
 
 ![External PSI comparison ineligibility](plots/external_comparison_ineligible.png)
 
@@ -20,7 +20,8 @@ not measured-vs-reference PSI evidence and it does not emit a validation PASS.
 ~/projects/automation/bin/run-bench.sh examples/uniform_inflow_surface_seam
 ```
 
-References: Bagnold (1941); Shields (1936); Iversen & White (1982); Roberts, IAS Paper 63-50 (1963); Schiller & Naumann (1935).
+The local drag closure is Schiller & Naumann (1935). The crater experiment used
+only for the ineligibility audit is Metzger et al. (2009).
 
 The reference provenance and the limits of this case are recorded in [data/references.md](data/references.md).
 

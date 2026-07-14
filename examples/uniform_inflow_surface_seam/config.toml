@@ -2,9 +2,9 @@
 # GRASS coupling seam (exchange ports).  This is a seam probe, not a jet, nozzle,
 # wall-jet, crater, or PSI model.
 #
-# DECLARATIVE case data only — every physical constant, sweep point and tolerance
-# lives here; the example reads it and never hard-codes case values. See the
-# example header for the full rationale and references.
+# DECLARATIVE case data only — every physical constant and sweep point lives
+# here; the example reads it and never hard-codes case values.  This case has
+# no acceptance tolerance because it is not an external PSI validation.
 
 [gas]
 rho = 1.0          # gas density ρ_f (kg/m³)  (a thin planetary / near-surface plume gas)
@@ -43,41 +43,8 @@ nz   = 16
 ng   = 2
 z_hi = 0.12               # gas domain extends well above the bed
 
-[loglaw]
-# Universal rough-wall log-law constants used ONLY to convert the recovered
-# near-surface onset slip u_gc into a friction velocity u* for the Bagnold-A anchor:
-#   u* = u_gc · κ / ln(z_ref/z0),  z_ref = grain top ≈ d,  z0 = d/roughness_ratio.
-# κ (von Kármán) and z0=d/30 (Nikuradse rough-wall) are textbook, NOT fitted.
-kappa           = 0.41
-roughness_ratio = 30.0
-
-[scaling]
-# Reduced-gravity trend (Part B, falsifiable): erosion onset must scale u_gc ∝ g^{1/2}
-# (Bagnold/Shields submerged-weight balance) — the reduced-gravity behaviour that is
-# central to lunar/Mars plume-surface interaction. Sweep gravity Moon→Mars→Earth at
-# fixed grain. (Exponent is broadened from 0.5 to allow the Schiller–Naumann C_d(Re)
-# drift over the sweep; a g-INDEPENDENT cohesive resistance gives ~0 and fails.)
-g_list = [1.62, 3.71, 9.81]        # Moon, Mars, Earth surface gravity (m/s²)
-
 [run]
-# Live coupled sweep (Part C): uniform inlet-speed factors × the baseline
-# entrainment onset u_gc.  This is an exploratory port/seam response, not PSI.
+# Live coupled sweep: uniform inlet-speed factors × the local drag-to-weight
+# scale.  This is an exploratory port/seam response, not PSI.
 u_factors = [0.5, 1.8, 3.0]
 dyn_steps = 800
-
-[diagnostics]
-# ── Exploratory Bagnold/reduced-gravity context — not a validation gate ──
-# These literature values annotate diagnostic output only. They are not a
-# tolerance, acceptance criterion, or substitute for a matched PSI observation.
-bagnold_a_ref = 0.10
-bagnold_a_lo  = 0.06
-bagnold_a_hi  = 0.20
-bagnold_a_err_floor = 0.05    # |A_meas−0.10|/0.10 must exceed this (independent closure)
-# Reduced-gravity exponent context for u_gc ∝ g^p; a cohesive control is printed
-# as a contrast, not used as a scientific acceptance test.
-grav_exponent_lo = 0.40
-grav_exponent_hi = 0.72
-
-# ── Live coupled response through the grass Port seam (exploratory) ──
-# The result is reported only; it carries no PSI acceptance criterion.
-erode_min_hspeed = 0.01       # m/s — mean entrained-grain speed floor (they must actually move)
