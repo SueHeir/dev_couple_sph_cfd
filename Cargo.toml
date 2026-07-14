@@ -16,7 +16,7 @@ name = "packed_bed_seam"
 path = "examples/packed_bed_seam/main.rs"
 
 [[example]]
-name = "jet_crater"
+name = "uniform_inflow_surface_seam"
 path = "examples/jet_crater/main.rs"
 
 # ---------------------------------------------------------------------------

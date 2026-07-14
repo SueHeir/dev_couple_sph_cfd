@@ -1,6 +1,6 @@
-# Jet–crater erosion: CFD gas wall-jet driving a granular-SPH free surface through
-# the GRASS coupling seam (exchange ports). Bagnold/Shields and Roberts provide
-# modelling context only; this configuration is not externally PSI-validated.
+# Uniform top-boundary inflow driving a granular-SPH free surface through the
+# GRASS coupling seam (exchange ports).  This is a seam probe, not a jet, nozzle,
+# wall-jet, crater, or PSI model.
 #
 # DECLARATIVE case data only — every physical constant, sweep point and tolerance
 # lives here; the example reads it and never hard-codes case values. See the
@@ -43,15 +43,6 @@ nz   = 16
 ng   = 2
 z_hi = 0.12               # gas domain extends well above the bed
 
-[jet]
-# Planar impinging jet: centred at x_center, spreads along the surface as a wall jet.
-# Near-surface horizontal gas speed u_g(x)=U_peak·(|ξ|/a)·exp(1−|ξ|/a), ξ=x−x_center,
-# so u_g(0)=0 at the stagnation line and peaks at |ξ|=a (Glauert 1956 wall-jet shape;
-# the Roberts (1963) signature is the OFF-AXIS shear peak, not the exact profile).
-x_center = 0.12
-a        = 0.045          # wall-jet peak offset from the stagnation line (m)
-surface_band = 0.006      # near-surface gas layer thickness the profile is imposed in (m)
-
 [loglaw]
 # Universal rough-wall log-law constants used ONLY to convert the recovered
 # near-surface onset slip u_gc into a friction velocity u* for the Bagnold-A anchor:
@@ -69,8 +60,8 @@ roughness_ratio = 30.0
 g_list = [1.62, 3.71, 9.81]        # Moon, Mars, Earth surface gravity (m/s²)
 
 [run]
-# Live coupled sweep (Part C): U_peak factors × the baseline erosion onset u_gc.
-# MUST bracket 1.0 (some below onset, some above) so the falsifiable threshold shows.
+# Live coupled sweep (Part C): uniform inlet-speed factors × the baseline
+# entrainment onset u_gc.  This is an exploratory port/seam response, not PSI.
 u_factors = [0.5, 1.8, 3.0]
 dyn_steps = 800
 
@@ -88,9 +79,6 @@ bagnold_a_err_floor = 0.05    # |A_meas−0.10|/0.10 must exceed this (independe
 grav_exponent_lo = 0.40
 grav_exponent_hi = 0.72
 
-# ── Part C: live coupled erosion through the grass Port seam (falsifiable) ──
-# Above onset surface grains ENTRAIN (n_eroding>0) and MOVE (mean eroding speed >
-# erode_min_hspeed); below onset and with a severed port NOTHING entrains (n_eroding=0).
+# ── Part C: live coupled response through the grass Port seam (exploratory) ──
+# The result is reported only; it carries no PSI acceptance criterion.
 erode_min_hspeed = 0.01       # m/s — mean entrained-grain speed floor (they must actually move)
-# `jet` geometry remains recorded for diagnostics. It is no longer a Roberts
-# localization acceptance gate: no digitized, geometry-matched Roberts datum exists.

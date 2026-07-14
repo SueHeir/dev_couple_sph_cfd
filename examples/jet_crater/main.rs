@@ -1,18 +1,15 @@
-//! **Jet–surface interaction: an advancing CFD impinging inflow driving a granular-
-//! SPH free surface through the GRASS coupling seam, with exploratory mechanism
-//! diagnostics.**
+//! **Uniform-inflow surface seam probe: a CFD top-boundary inflow coupled to a
+//! granular-SPH free surface through the GRASS coupling seam.**
 //!
-//! A rocket exhaust plume impinging on a granular surface can turn into a wall jet
-//! whose near-surface shear entrains surface grains and excavates a **crater** — the
-//! plume-surface interaction (PSI) problem central to lunar/Mars landing. This
-//! example starts the gas quiescent and supplies a downward top-boundary inflow;
-//! the **CFD gas solver** (test-cfd FIELD substrate,
+//! This example starts the gas quiescent and supplies a spatially uniform downward
+//! top-boundary inflow. It is deliberately not a nozzle, impinging jet, wall-jet,
+//! or crater model. The **CFD gas solver** (test-cfd FIELD substrate,
 //! `CfdState`) to the **granular-SPH μ(I) continuum** (`sph_core`) *through the
 //! grass coupling contract* — `grass_multi`'s exchange **ports** (`add_port`,
 //! `expose_field`, `consume_field`) — and advances the coupled erosion state. It
 //! is deliberately *not* a quantitative PSI validation: this repository has no
-//! digitized, geometry-matched crater or erosion-rate data. Its controls test the
-//! executable seam, not agreement with a published crater data series.
+//! digitized, geometry-matched crater or erosion-rate data. Its controls test only
+//! the executable seam; they are not a substitute for a PSI comparison.
 //!
 //! ## What is coupled, and through what seam (the goal)
 //!
@@ -50,17 +47,11 @@
 //!      negative control** — resistance made *g-independent* — gives exponent ≈ 0
 //!      and FAILS the band, proving the gate is not vacuous.
 //!
-//! ## The live coupled demonstration (Part C — the plume-surface interaction)
+//! ## The live coupled seam probe (Part C)
 //!
-//! With the baseline grain, the CFD inlet is stepped against the settled SPH bed
-//! through the ports over a sweep of inlet strengths `U_peak = factor · u_gc`:
-//!   - **Falsifiable threshold.** Above onset the surface **mobilises** (crater
-//!     grows); below onset it stays **packed**.
-//!   - **Location diagnostic.** The reported mean erosion offset is observational
-//!     only. No Roberts location datum is digitized here, so it is not a gate.
-//!   - **Negative control (falsifiable).** With the drag **port severed**, the SAME
-//!     super-onset jet leaves the bed packed — the crater is caused by the coupling,
-//!     not by numerics.
+//! The CFD inlet is stepped against a settled SPH bed through the ports over a sweep
+//! of uniform inlet strengths. A severed-drag-port run is a coupling-fault control.
+//! Neither response is called crater growth or PSI validation.
 //!
 //! ## Honest labelling
 //!
@@ -71,8 +62,8 @@
 //! quantitative PSI comparison.
 //!
 //! ```text
-//! cargo run --release -p cfd_ibm --example jet_crater_erosion -- \
-//!     crates/cfd_ibm/examples/jet_crater_erosion.toml
+//! cargo run --release --example uniform_inflow_surface_seam -- \
+//!     examples/jet_crater/config.toml
 //! ```
 //!
 //! References: R. A. Bagnold, *The Physics of Blown Sand and Desert Dunes*, Methuen
@@ -143,13 +134,6 @@ struct GridCfg {
     nz: usize,
     ng: usize,
     z_hi: f64,
-}
-
-#[derive(Deserialize, Default, Clone, Copy)]
-struct JetCfg {
-    x_center: f64,
-    a: f64,
-    surface_band: f64,
 }
 
 #[derive(Deserialize, Default)]
@@ -472,8 +456,8 @@ fn build_gas_app(gas: &GasCfg, mesh_cfg: UniformMeshConfig, props: GasProps) -> 
     let t = p / (rho * R_GAS);
     let init = move |_x: Vec3| {
         let eos = IdealGas::air();
-        // Start quiescent: the physical inlet below, not an interior write,
-        // supplies the jet. The CFD update determines its route to the bed.
+        // Start quiescent: the physical top boundary, not an interior write,
+        // supplies the uniform inflow. The CFD update determines its route to the bed.
         eos.prim_to_cons(&PrimVar::new(rho, 0.0, 0.0, 0.0, p, t))
     };
     let bcs = BoundaryRegistry::default()
@@ -518,7 +502,7 @@ enum Phase {
     TickSph,     // SPH steps (+ refreshes its surface, applies last step's drag)
     ExposeSurf,  // SPH surface → Port<SurfaceMsg>
     ConsumeSurf, // Port<SurfaceMsg> → gas
-    TickGas,     // gas imposes wall jet + forms drag
+    TickGas,     // gas advances the uniform top inflow + forms drag
     ExposeDrag,  // gas drag → Port<DragMsg>
     ConsumeDrag, // Port<DragMsg> → SPH
 }
@@ -545,29 +529,26 @@ impl ScheduleSet for Phase {
     }
 }
 
-struct CraterResult {
+struct SurfaceResponse {
     /// Mean horizontal speed of the ENTRAINED (eroding) surface parcels.
     mean_eroding_hspeed: f64,
-    /// Mean |x−x_center| of the entrained parcels (Roberts off-axis offset).
-    erosion_offset: f64,
     n_surface: usize,
     n_eroding: usize,
 }
 
-/// One coupled run at wall-jet strength `u_peak`: build SPH+gas sub-Apps, settle the
-/// bed, march the parent loop `steps` times through the ports, and measure the crater.
+/// One coupled run at a uniform inlet speed: build SPH+gas sub-Apps, settle the bed,
+/// march the parent loop `steps` times through the ports, and measure the response.
 #[allow(clippy::too_many_arguments)]
 fn run_coupled(
     gas: &GasCfg,
     bed: &BedCfg,
     grid: &GridCfg,
-    jet: &JetCfg,
     g: f64,
     gz: f64,
     u_peak: f64,
     steps: usize,
     sever: bool,
-) -> CraterResult {
+) -> SurfaceResponse {
     let dt = bed.sph_dt;
     let params = SphCoupleParams {
         rho_s: bed.rho_s,
@@ -620,7 +601,7 @@ fn run_coupled(
     );
     parent.prepare();
 
-    // Settle the SPH bed before the jet is applied.
+    // Settle the SPH bed before the inflow is applied.
     {
         let cell = parent.get_mut_resource(TypeId::of::<SubApps>()).unwrap();
         let mut gd = cell.borrow_mut();
@@ -633,7 +614,7 @@ fn run_coupled(
         parent.run();
     }
 
-    let result = measure_crater(&parent, jet);
+    let result = measure_surface_response(&parent);
     if let Some(cell) = parent.get_mut_resource(TypeId::of::<SubApps>()) {
         cell.borrow_mut()
             .downcast_mut::<SubApps>()
@@ -654,8 +635,8 @@ fn scatter_drag(dst: &mut SphDrag, msg: &DragMsg) {
     }
 }
 
-/// Read the SPH sub-App's erosion diagnostic to score the crater.
-fn measure_crater(parent: &App, jet: &JetCfg) -> CraterResult {
+/// Read the SPH sub-App's entrainment diagnostic for this seam probe.
+fn measure_surface_response(parent: &App) -> SurfaceResponse {
     let subs = parent.get_resource_ref::<SubApps>().unwrap();
     let sph = subs.find("sph").unwrap();
     let n_surface = {
@@ -676,14 +657,8 @@ fn measure_crater(parent: &App, jet: &JetCfg) -> CraterResult {
     } else {
         0.0
     };
-    let offset = if n_eroding > 0 {
-        diag.x.iter().map(|x| (x - jet.x_center).abs()).sum::<f64>() / n_eroding as f64
-    } else {
-        0.0
-    };
-    CraterResult {
+    SurfaceResponse {
         mean_eroding_hspeed: mean_h,
-        erosion_offset: offset,
         n_surface,
         n_eroding,
     }
@@ -694,7 +669,7 @@ fn measure_crater(parent: &App, jet: &JetCfg) -> CraterResult {
 fn main() {
     let path = std::env::args()
         .nth(1)
-        .expect("usage: jet_crater_erosion <case.toml>");
+        .expect("usage: uniform_inflow_surface_seam <case.toml>");
     let toml_src =
         std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {path}: {e}"));
     let cfg = grass_io::Config::from_str(&toml_src);
@@ -702,7 +677,6 @@ fn main() {
     let gas: GasCfg = cfg.section("gas");
     let bed: BedCfg = cfg.section("bed");
     let grid: GridCfg = cfg.section("grid");
-    let jet: JetCfg = cfg.section("jet");
     let grav: GravityCfg = cfg.section("gravity");
     let ll: LogLawCfg = cfg.section("loglaw");
     let scaling: ScalingCfg = cfg.section("scaling");
@@ -710,9 +684,9 @@ fn main() {
     let valid: ValidationCfg = cfg.section("validation");
     let g0 = grav.gz.abs();
 
-    println!("# Jet–crater erosion: CFD gas wall-jet driving a granular-SPH free surface");
+    println!("# Uniform CFD top-boundary inflow driving a granular-SPH free surface");
     println!("# COUPLING: grass exchange ports (grass_multi::Port / expose_field / consume_field)");
-    println!("# CONTEXT: Bagnold (1941) threshold + Roberts (1963) wall-jet mechanism");
+    println!("# CONTEXT: Bagnold (1941) threshold diagnostic; not a jet or PSI model");
     println!(
         "# gas: rho_f={} mu={:.3e}   grain d={:.3e} m   rho_s={}   mu_s(tanφ)={}",
         gas.rho, gas.mu, bed.grain_d, bed.rho_s, bed.mu_s
@@ -779,42 +753,27 @@ fn main() {
         valid.grav_exponent_lo, valid.grav_exponent_hi
     );
 
-    // ── Part C: live coupled erosion through the grass ports ─────────────────────
+    // ── Part C: live coupled response through the grass ports ────────────────────
     println!("#");
-    println!("# ── Part C: live coupled wall-jet → SPH crater (through grass ports) ──");
-    println!("#   U/u_gc   U_peak[m/s]   n_erode/n_surf   mean eroding |v_h|   offset/a   state");
+    println!("# ── Part C: live uniform-inflow → SPH seam response (through grass ports) ──");
+    println!("#   U/u_gc   U_in[m/s]   n_entrained/n_surf   mean entrained |v_h|   state");
     let mut below_ok = true;
     let mut below_seen = false;
     let mut above_ok = true;
     let mut above_seen = false;
     for &fac in &run.u_factors {
         let u_peak = fac * u_gc;
-        let r = run_coupled(
-            &gas,
-            &bed,
-            &grid,
-            &jet,
-            g0,
-            grav.gz,
-            u_peak,
-            run.dyn_steps,
-            false,
-        );
+        let r = run_coupled(&gas, &bed, &grid, g0, grav.gz, u_peak, run.dyn_steps, false);
         let eroding = r.n_eroding > 0 && r.mean_eroding_hspeed > valid.erode_min_hspeed;
-        let off = if r.n_eroding > 0 {
-            r.erosion_offset / jet.a
-        } else {
-            0.0
-        };
         let state = if fac > 1.0 {
             above_seen = true;
             if !eroding {
                 above_ok = false;
             }
             if eroding {
-                "ERODES (exploratory)"
+                "entrained (exploratory)"
             } else {
-                "no erosion (unexpected)"
+                "not entrained (exploratory)"
             }
         } else {
             below_seen = true;
@@ -822,18 +781,18 @@ fn main() {
                 below_ok = false;
             }
             if r.n_eroding == 0 {
-                "packed (bed intact)"
+                "packed (exploratory)"
             } else {
-                "eroded (unexpected)"
+                "entrained below onset (exploratory)"
             }
         };
         println!(
-            "  {fac:>6.2}   {u_peak:>10.4}   {:>6}/{:<6}   {:>18.4e}   {off:>8.3}   {state}",
+            "  {fac:>6.2}   {u_peak:>8.4}   {:>6}/{:<6}   {:>20.4e}   {state}",
             r.n_eroding, r.n_surface, r.mean_eroding_hspeed
         );
     }
 
-    // Negative control: severed drag port at the strongest jet — must NOT erode.
+    // Fault control: sever the drag port at the strongest uniform inflow.
     let strongest = run
         .u_factors
         .iter()
@@ -844,7 +803,6 @@ fn main() {
         &gas,
         &bed,
         &grid,
-        &jet,
         g0,
         grav.gz,
         strongest * u_gc,
@@ -856,9 +814,9 @@ fn main() {
         "# severed-port control (U/u_gc={strongest:.2}): n_erode={} -> {}",
         sev.n_eroding,
         if pass_sever {
-            "packed (no crater; the coupling is the cause)"
+            "packed (exploratory fault control)"
         } else {
-            "ERODED WITHOUT GAS — control vacuous!"
+            "entrained with severed port — investigate"
         }
     );
 
@@ -885,8 +843,8 @@ fn main() {
         && pass_sever
     {
         println!(
-            "EXPLORATORY CONTROLS: PASS  (Bagnold/context and coupled-seam controls pass; \
-             this is NOT external PSI validation: no digitized geometry-matched crater/erosion data are compared)",
+            "EXPLORATORY RESPONSE RECORDED (not a PSI validation verdict; no digitized, \
+             geometry-matched crater/erosion data are compared)",
         );
     } else {
         println!("EXPLORATORY CONTROLS: FAIL");

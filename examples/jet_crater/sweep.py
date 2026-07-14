@@ -91,7 +91,7 @@ def main() -> None:
     raise RuntimeError("eligible reference has no implemented quantitative comparator")
 
     proc = subprocess.run(
-        ["cargo", "run", "--release", "--example", "jet_crater", "--", "examples/jet_crater/config.toml"],
+        ["cargo", "run", "--release", "--example", "uniform_inflow_surface_seam", "--", "examples/jet_crater/config.toml"],
         cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False,
     )
     print(proc.stdout)
@@ -121,9 +121,9 @@ def main() -> None:
     ax.plot(factors, surface, "o--", color="#64748b", label="surface parcels")
     for x, y, off in zip(factors, eroded, offsets): ax.annotate(f"offset/a={off:.2f}", (x, y), xytext=(3, 6), textcoords="offset points", fontsize=8)
     ax.axvline(1, color="#7c3aed", ls="--", label="onset")
-    ax.set(xlabel="wall-jet strength U/u_gc", ylabel="parcel count", title="Live CFD→SPH exploratory response")
+    ax.set(xlabel="uniform-inflow strength U/u_gc", ylabel="parcel count", title="Live CFD→SPH exploratory response")
     ax.legend(fontsize=8)
-    fig.suptitle(f"Jet–crater exploratory controls: {verdict} — not external PSI validation", fontweight="bold")
+    fig.suptitle(f"Uniform-inflow seam controls: {verdict} — not external PSI validation", fontweight="bold")
     OUT.parent.mkdir(exist_ok=True)
     fig.savefig(OUT, dpi=160)
     print(f"Wrote {OUT.relative_to(ROOT)}")

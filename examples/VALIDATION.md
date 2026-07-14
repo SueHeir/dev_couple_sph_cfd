@@ -15,10 +15,11 @@ closed if a public record changes or cannot be retrieved, but it is not a
 physical acceptance criterion and is intentionally absent from the executable
 validation manifest.
 
-## Boundary-driven CFD/SPH jet case (exploratory)
+## Boundary-driven CFD/SPH uniform-inflow seam probe (exploratory)
 
-[The jet_crater case](jet_crater/README.md) restores an advancing CFD inflow
-and port-coupled SPH surface response.  Its committed eligibility figure and
+[The uniform_inflow_surface_seam case](jet_crater/README.md) advances a spatially
+uniform CFD top-boundary inflow and a port-coupled SPH surface response. It does
+not provide nozzle or impinging-jet physics. Its committed eligibility figure and
 external-reference audit deliberately report **INELIGIBLE**, not a PSI pass:
 the available Metzger et al. crater trace has a different circular geometry,
 gas/material, grain range, duration, and observable.  This is executable seam
