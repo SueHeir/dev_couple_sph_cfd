@@ -1,19 +1,13 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Coupled SPH–CFD plume/surface interaction — the DYNAMIC minimum-fluidization
-# limit, cross-validated against the resolved DEM–CFD reference.
+# Imposed-flow packed-bed force-transfer smoke case. This is not a plume,
+# impinging-jet, crater, erosion, or ejecta case.
 #
 # A gas flows UP (+z) through a settled μ(I)-continuum granular bed (dev_soil_sph SPH),
 # coupled to the gas (dev_field_efvm FIELD) through the DEM–CFD seam VERBATIM
-# (`cfd_ibm::coupling`). The tolerance-checked observable is the minimum
-# fluidization velocity U_mf, measured through the LIVE coupled seam and:
-#   1. cross-method vs the discrete DEM–CFD bed run through the identical seam
-#      (the resolved DEM–CFD reference — cf. fluidized_bed_umf / PR #6),
-#   2. vs the independent Wen & Yu (1966) correlation,
-# with two negative controls (omit-∇P, ε-power bug) that RUN and must fail, plus a
-# live coupled dynamical sweep in which the SPH continuum fluidizes above U_mf
-# (net upward COM velocity, grain-contact pressure collapsing) and stays packed
-# below. The MEASURED force uses the INDEPENDENT MacDonald (1979) 180/1.8 closure
-# (no shared constant with Wen & Yu), so agreement is genuine, not tautological.
+# (`cfd_ibm::coupling`). The local smoke case reports U_mf through the live seam,
+# plus a same-seam DEM consistency value and a Wen & Yu (1966) packed-bed
+# comparator. Sensitivity probes and the dynamic sweep are reported as diagnostics.
+# They do not create experimental evidence or plume acceptance criteria.
 #
 # Small & fast: coarse gas mesh, d = 0.5 mm grains, a ~3 cm bed, air.
 # Everything below is declarative; the .rs holds no physics magic numbers.
@@ -23,6 +17,11 @@
 rho = 1.2          # kg/m^3  (air)
 p   = 1.0e5        # Pa
 mu  = 1.8e-5       # Pa.s    (air dynamic viscosity)
+
+[flow]
+# This executable accepts only this explicitly imposed, spatially uniform flow.
+# It is deliberately not a nozzle boundary condition or an advancing CFD solve.
+model = "imposed_uniform_interstitial_velocity"
 
 [bed]
 # μ(I) granular material (glass-like) — the dev_soil_sph SPH continuum.
@@ -71,17 +70,3 @@ ncz = 8
 # Live coupled dynamical fluidization sweep (× U_mf) — must bracket onset (1.0).
 dyn_factors = [0.5, 0.8, 1.2, 1.5]
 dyn_steps   = 2500        # coupled parent iterations per sweep point
-
-[validation]
-# Gate: cross-method + independent + non-tautology + negative controls + dynamical.
-tol_dem          = 0.10   # |U_mf_SPH - U_mf_DEM| / U_mf_DEM (continuum vs discrete)
-tol_wenyu        = 0.20   # |U_mf_SPH - U_mf_WenYu| / U_mf_WenYu (fluidization scatter)
-umf_err_floor    = 0.005  # non-tautology floor: measured vs-WenYu err must exceed this
-eps_bed_lo       = 0.33   # settled continuum voidage in a physical range
-eps_bed_hi       = 0.47
-eps_max          = 0.50   # dense (Ergun/MacDonald) regime gate
-tol_deposit_cell = 0.10   # worst |eps_cell - eps_bed|/eps_bed (deposit fidelity)
-tol_momentum     = 1.0e-9 # two-way momentum-exchange conservation (sanity)
-fluidized_p_frac = 0.05   # above U_mf: contact p COLLAPSES below 5% of settled (offloaded)
-packed_p_frac    = 0.10   # below U_mf: contact p stays above 10% of settled (residual load)
-v_fluid_min      = 1.0e-3 # m/s: upward COM velocity separating lifting from static

@@ -1,0 +1,50 @@
+# Uniform top-boundary inflow driving a granular-SPH free surface through the
+# GRASS coupling seam (exchange ports).  This is a seam probe, not a jet, nozzle,
+# wall-jet, crater, or PSI model.
+#
+# DECLARATIVE case data only — every physical constant and sweep point lives
+# here; the example reads it and never hard-codes case values.  This case has
+# no acceptance tolerance because it is not an external PSI validation.
+
+[gas]
+rho = 1.0          # gas density ρ_f (kg/m³)  (a thin planetary / near-surface plume gas)
+p   = 1.0e5        # gas pressure (Pa)
+mu  = 1.8e-5       # dynamic viscosity μ (Pa·s)  (air-like)
+
+[bed]
+rho_s        = 1500.0     # grain (solid) density ρ_s (kg/m³)  (regolith-like)
+rho_c        = 1500.0     # continuum reference density for the EOS
+mu_s         = 0.38       # μ(I) static friction  → tan(φ_repose)=μ_s (bed material property)
+mu_2         = 0.64       # μ(I) high-I friction
+i0           = 0.30       # μ(I) inertial-number scale
+bulk_modulus = 5.0e4      # EOS bulk modulus (Pa)  (soft, for a stable explicit dt)
+poisson      = 0.3
+grain_d      = 3.0e-3     # BASELINE grain diameter d (m) for the live coupled run
+restitution  = 0.6
+rest_density = 1500.0
+spacing      = 4.0e-3     # SPH parcel spacing (m)
+x_lo         = 0.0
+x_hi         = 0.24
+y_lo         = 0.0
+y_hi         = 0.016      # thin slab → quasi-2D (x–z) planar jet
+z_lo         = 0.0
+z_hi         = 0.032      # settled bed top (~8 layers)
+floor_thickness = 0.012
+settle_steps = 4000
+sph_dt       = 2.0e-5
+
+[gravity]
+gz = -9.81               # Earth-surface baseline; Part B sweeps g for the reduced-gravity trend
+
+[grid]
+nx   = 60
+ny   = 4
+nz   = 16
+ng   = 2
+z_hi = 0.12               # gas domain extends well above the bed
+
+[run]
+# Live coupled sweep: uniform inlet-speed factors × the local drag-to-weight
+# scale.  This is an exploratory port/seam response, not PSI.
+u_factors = [0.5, 1.8, 3.0]
+dyn_steps = 800

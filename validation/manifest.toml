@@ -1,11 +1,11 @@
 [set]
-name = "dev_couple_sph_cfd-validation"
+name = "dev_couple_sph_cfd-smoke"
 tier = "dev_couple_sph_cfd"
-description = "Skeptic-facing validation gate for the SPH<->CFD plume/surface coupling. The gate runs the live plume_surface seam, compares measured U_mf against DEM-CFD and Wen-Yu references, executes negative controls, and regenerates the committed validation figure from the same output."
+description = "Executable packed-bed force-transfer smoke case. It is not a plume/crater validation gate; external held-out evidence is required before that claim can be evaluated."
 
 [[validation]]
-id = "plume_surface"
+id = "packed_bed_seam_smoke"
 mode = "smoke"
-kind = "example-sweep"
-command = "python3 examples/plume_surface/sweep.py"
-reference = "Dynamic SPH-CFD minimum fluidization through the live seam: SPH measured U_mf is checked against the same-seam DEM-CFD reference and the independent Wen & Yu (1966) correlation; omit-gradP and eps-power-bug negative controls must move outside tolerance. The sweep regenerates examples/plume_surface/plots/plume_surface_validation.svg."
+kind = "example-smoke"
+command = "cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml"
+reference = "A homogeneous, imposed-flow executable smoke case. Same-seam DEM and Wen & Yu are diagnostics only; sensitivity probes exercise altered coupling paths. No local result is an acceptance criterion or scientific evidence."

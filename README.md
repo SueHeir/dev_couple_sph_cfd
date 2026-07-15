@@ -28,19 +28,41 @@ their own thing: they need `grass_multi` + a transport/interphase seam, and they
 compose two independently-developed tiers. So each such coupling gets its own
 `dev_couple_*` repo, depending on its two partner tiers and nothing more.
 
-## What it does — plume ↔ surface interaction
+## What it does — packed-bed fluidization seam
 
 Reusable SPH-CFD coupling code lives in `crates/sph_cfd`: packed-bed closure and
 reference helpers, parcel deposition, force-balance measurement, SPH force import,
 CFD-side seam resources/systems, and the standard `grass_multi` exchange schedule.
-Examples keep case geometry, validation tolerances, comparison packings, and plots.
+Examples keep case geometry and diagnostic comparison packings.
 
-The `plume_surface` example couples a compressible gas jet (dev_field_efvm, on a
-FIELD mesh) to a granular bed (dev_soil_sph, as SOIL particles): the gas exerts
-drag on the grains and the grains displace/block the gas — the dynamic
-minimum-fluidization / landing-plume-on-regolith cratering problem. The two
-solvers run as **grass sub-Apps under one parent schedule** (`Tick → Couple`),
-sharing exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
+The `packed_bed_seam` example couples an **imposed homogeneous interstitial gas
+velocity** (stored in dev_field_efvm's FIELD state) to a granular bed
+(dev_soil_sph, as SOIL particles). It exercises the drag/pressure-gradient
+force hand-off and runs an executable packed-bed seam smoke case with a Wen--Yu
+diagnostic comparator and sensitivity probes. It does not advance a CFD
+solution or represent a nozzle, a plume, or a crater. The two sub-Apps run
+as **grass sub-Apps under one parent schedule** (`Tick → Couple`), sharing
+exactly one `grass_app::App` and `soil_core::Atom` type across the seam.
+
+This repository does not currently provide an advancing-CFD impinging-jet case,
+nor a validated crater, erosion, or ejecta prediction. Such a claim requires an
+advancing CFD solver with specified inlet/outlet conditions, a geometry-,
+material-, forcing-, and observation-time-matched experimental series, and a
+same-observable comparator with an adversarial wrong-coupling control. A
+self-consistent flow profile or differently configured experiment is not a
+substitute. The concrete held-out protocol, including source provenance and an
+adversarial wrong-coupling control, is in
+[`examples/packed_bed_seam/EXTERNAL_VALIDATION.md`](examples/packed_bed_seam/EXTERNAL_VALIDATION.md).
+No local manifest or claim guard is scientific evidence. This code and its
+documentation were authored with AI assistance and require domain-expert review
+before use in scientific conclusions.
+
+For citation maintenance only, `python3
+references/audit_public_records.py` independently rechecks the identity of the
+public PSI context records named by that protocol. It is deliberately outside
+the executable validation manifest: a public landing page is not an observation
+series, and a successful retrieval is neither data validation nor a scientific
+acceptance gate.
 
 The coupling system runs on the **parent** App. It obtains stable participant
 handles from `SubApps`, reads each solver's resources between child ticks, and
@@ -64,12 +86,13 @@ mpirun --oversubscribe -np 5 target/debug/examples/routed_sph_cfd
 
 ```bash
 # all partner repos are sibling checkouts (grass, soil, field, dev_soil_sph, dev_field_efvm)
-cargo run --release --example plume_surface -- examples/plume_surface/config.toml
+cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
 ```
 
-Repo-level validation is declared in `validation/manifest.toml` and runs through
-`validation/run.sh`, which delegates to the plume-surface sweep so the numeric
-gate and committed figure come from the same measured output.
+The runnable packed-bed smoke case is intentionally kept separate from the
+unmet impinging-plume acceptance claim. It demonstrates a configured local
+force hand-off, but it is not an eligibility gate for a crater or erosion
+prediction.
 
 ## License
 

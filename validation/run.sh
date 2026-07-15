@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-# dev_couple_sph_cfd validation harness - SPH<->CFD plume/surface coupling.
+# dev_couple_sph_cfd executable smoke harness - imposed-flow packed-bed seam.
 #
 #   ./validation/run.sh
 #
-# The gate delegates to examples/plume_surface/sweep.py, which runs the live
-# coupled example, checks measured U_mf against DEM-CFD and Wen-Yu references,
-# verifies the negative controls, and regenerates the committed SVG figure from
-# the same parsed output.
+# The harness runs the live coupled example. Completion proves only that this
+# configured cross-substrate path executed; it does not validate a plume or crater.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-PY="${BENCH_PYTHON:-python3}"
-
-echo "=== dev_couple_sph_cfd validation set ==="
-"$PY" examples/plume_surface/sweep.py
-echo "=== all dev_couple_sph_cfd validation gates passed ==="
+echo "=== dev_couple_sph_cfd packed-bed seam smoke ==="
+cargo run --release --example packed_bed_seam -- examples/packed_bed_seam/config.toml
+echo "=== packed-bed seam smoke completed (not physical validation) ==="
