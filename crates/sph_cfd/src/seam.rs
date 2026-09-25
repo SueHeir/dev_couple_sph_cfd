@@ -34,7 +34,7 @@ pub fn sph_fluid_force(
     registry: Res<AtomDataRegistry>,
 ) {
     let sph = registry.expect::<SphAtom>("sph_fluid_force");
-    let n = atoms.nlocal as usize;
+    let n = atoms.nlocal() as usize;
     for i in 0..n {
         if sph.is_boundary[i] > 0.5 {
             continue;
@@ -55,7 +55,7 @@ pub fn read_sph_bed(app: &App, rho_s: f64) -> (Vec<Parcel>, f64, f64, f64, f64) 
         .get_resource_ref::<AtomDataRegistry>()
         .expect("registry");
     let sph = registry.expect::<SphAtom>("read_sph_bed");
-    let n = atoms.nlocal as usize;
+    let n = atoms.nlocal() as usize;
     let mut parcels = Vec::new();
     let (mut sum_phi, mut sum_p) = (0.0, 0.0);
     let mut nfree = 0usize;
@@ -237,7 +237,7 @@ pub fn build_coupled_cfd(gas: &GasCfg, mesh_cfg: UniformMeshConfig, props: Coupl
 
 pub fn export_kinematics(world: Multi) {
     let atoms = world.expect_read::<Atom>("sph");
-    let n = atoms.nlocal as usize;
+    let n = atoms.nlocal() as usize;
     let radii = {
         let spec = world.expect_read::<ParcelSpec>("cfd");
         spec.radius.clone()
@@ -290,7 +290,7 @@ pub fn prime_sph_and_spec(parent: &mut App, settle_steps: usize, rho_s: f64) {
         let atoms = atom_cell.downcast_ref::<Atom>().unwrap();
         let registry = reg_cell.downcast_ref::<AtomDataRegistry>().unwrap();
         let sph = registry.expect::<SphAtom>("prime_sph_and_spec");
-        let n = atoms.nlocal as usize;
+        let n = atoms.nlocal() as usize;
         let (mut radius, mut v_solid) = (Vec::with_capacity(n), Vec::with_capacity(n));
         for i in 0..n {
             let vs = sph.particle_mass[i] / rho_s;
@@ -325,7 +325,7 @@ pub fn sph_bed_state(parent: &App) -> (f64, f64) {
     let atoms = atom_cell.downcast_ref::<Atom>().unwrap();
     let registry = reg_cell.downcast_ref::<AtomDataRegistry>().unwrap();
     let sph = registry.expect::<SphAtom>("sph_bed_state");
-    let n = atoms.nlocal as usize;
+    let n = atoms.nlocal() as usize;
     let (mut sum_vz, mut sum_p) = (0.0, 0.0);
     let mut nfree = 0usize;
     for i in 0..n {
