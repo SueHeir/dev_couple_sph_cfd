@@ -264,7 +264,7 @@ fn sph_surface_and_erode(
     mut diag: ResMut<SphErosionDiag>,
 ) {
     let sph = registry.expect::<SphAtom>("sph_surface_and_erode");
-    let n = atoms.nlocal as usize;
+    let n = atoms.nlocal() as usize;
     // Current free-surface top.
     let mut z_top = f64::NEG_INFINITY;
     for i in 0..n {
