@@ -320,7 +320,7 @@ fn build_sph_app(bed: &BedCfg, gz: f64, dt: f64, params: SphCoupleParams) -> App
     });
     app.add_plugins(CorePlugins)
         .add_plugins(SphDefaultPlugins)
-        .add_plugins(SphGravityPlugin);
+        .add_plugins(GravityPlugin);
     app.add_resource(params);
     app.add_resource(SphDrag::default());
     app.add_resource(SphSurface::default());

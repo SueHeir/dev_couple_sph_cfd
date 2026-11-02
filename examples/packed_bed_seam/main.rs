@@ -170,7 +170,7 @@ fn build_sph_app(bed: &BedCfg, grav: &GravityCfg, dt: f64) -> App {
     });
     app.add_plugins(CorePlugins)
         .add_plugins(SphDefaultPlugins)
-        .add_plugins(SphGravityPlugin);
+        .add_plugins(GravityPlugin);
     app.add_resource(FluidForces::default());
     app.add_update_system(sph_fluid_force, ParticleSimScheduleSet::Force);
     app
