@@ -1,7 +1,6 @@
 //! Coupling-owned spatial records for distributed SPH-CFD exchange.
 
-use field_core::PartitionDirectory;
-use grass_multi::{EntityId, ReceivedPayload, RoutedPayload};
+use grass_multi::{EntityId, OwnerMap, ReceivedPayload, RoutedPayload};
 use std::collections::BTreeMap;
 
 const PARCEL_BYTES: usize = 8 + 4 + 3 * 8 + 3 * 8 + 8;
@@ -24,7 +23,7 @@ pub struct RoutedParcelForce {
 }
 
 pub fn route_parcels(
-    directory: &PartitionDirectory,
+    directory: &dyn OwnerMap,
     parcels: &[RoutedParcel],
 ) -> Result<Vec<RoutedPayload>, String> {
     parcels
